@@ -8,8 +8,8 @@ let app = express();
 let server = http.Server(app);
 let io = socketio(server);
 
-let redis = new Redis({ password: "passwort" });
-let sub = new Redis({ password: "passwort" });
+let redis = new Redis({ host: '192.168.99.100', password: "passwort" });
+let sub = new Redis({ host: '192.168.99.100', password: "passwort" });
 
 // Use the given port:
 let port = process.env.PORT || 3000;
