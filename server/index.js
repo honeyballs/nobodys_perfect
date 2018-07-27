@@ -34,45 +34,42 @@ io.on("connection", socket => {
 
   emitAllGames()
 
-  socket.on("create game", name => {
+  socket.on("create game", async name => {
     console.log("create game: "+name)
     // Check if a game with this name exists
-    redis.exists(`game:${name}`, (err, result) => {
-        if (result === 0) {
-            redis.hmset(`game:${name}`, "playercount", 0, "state", "PRE_GAME");
-            redis.sadd(`games`, name);
-            socket.emit("created", name);
-            emitAllGames()
-            redis.publish('messages', 'New game created');
-        } else {
-            socket.emit("errorMsg", "A game with that name already exists.");
-        }
-    })
+    let result = await redis.exists(`game:${name}`)
+    if (result === 0) {
+        redis.hmset(`game:${name}`, "playercount", 0, "state", "PRE_GAME");
+        redis.sadd(`games`, name);
+        socket.emit("created", name);
+        emitAllGames()
+        redis.publish('messages', 'New game created');
+    } else {
+        socket.emit("errorMsg", "A game with that name already exists.");
+    }
   });
 
-  socket.on("join game", name => {
+  socket.on("join game", async name => {
     console.log("join game: "+name)
-    redis.smembers(`game:${name}`, (err, result) => {
-      if (result && result.length > 0) {
-        socket.emit("joined", result[0]);
+      let result = await redis.hgetall(`game:${name}`)
+      if (result && result.state) {
+        socket.emit("joined", name);
       } else {
-          socket.emit("errorMsg", `There is no game with the name "${name}"`);
+        socket.emit("errorMsg", `There is no game with the name "${name}"`);
       }
-    });
   });
 
   socket.on("disconnect", () => {
     console.log("A user disconnected.");
   });
 
-  function emitAllGames(){
-    redis.smembers(`games`, (err, result) => {
-      let gamelist = []
-      if (result && result.length > 0) {
-        gamelist = result
-      }
-      socket.emit("gamelist", gamelist);
-    });
+  async function emitAllGames(){
+    let result = await redis.smembers(`games`)
+    let gamelist = []
+    if (result && result.length > 0) {
+      gamelist = result
+    }
+    socket.emit("gamelist", gamelist);
   }
 
 });
