@@ -10,6 +10,7 @@ import Lobby from './components/Lobby';
 let getState = () => {
     return {
         gamename: AppStore.getState().gamename,
+        games: AppStore.getState().games,
     }
 }
 
@@ -41,7 +42,7 @@ class App extends Component {
           <img src={logo} className="App-logo" alt="logo" />
           <h1 className="App-title">Nobodys perfect</h1>
         </header>
-        <Lobby gamename={this.state.gamename}/>
+        <Lobby gamename={this.state.gamename} games={this.state.games}/>
       </div>
     );
   }

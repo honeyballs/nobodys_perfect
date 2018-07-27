@@ -13,6 +13,10 @@ class AppActions {
     joinGame(){
       return true
     }
+
+    setGames(games){
+      return games
+    }
 }
 
 export default alt.createActions(AppActions);

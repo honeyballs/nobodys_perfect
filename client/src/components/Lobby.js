@@ -12,9 +12,16 @@ class Lobby extends Component {
           <input type="text" placeholder="Spielname" value={this.props.gamename || ""} onChange={(e)=>{AppActions.setGamename(e.target.value)}}/>
           <button onClick={AppActions.createGame}>anlegen</button>
           <button onClick={AppActions.joinGame}>beitreten</button>
+          <ul>
+            {this.props.games.map(game=> <li>{game}</li>)}
+          </ul>
         </div>
       </div>
     );
+  }
+
+  renderGame(game){
+    return (<li>game</li>)
   }
 }
 

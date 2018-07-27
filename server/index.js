@@ -32,30 +32,31 @@ sub.on('message', (channel, message) => {
 io.on("connection", socket => {
   console.log("A user connected.");
 
-  socket.on("create session", name => {
-    console.log(name);
-    // Check if a session with this name exists
-    redis.exists(`sessionName:${name}`, (err, result) => {
+  emitAllGames()
+
+  socket.on("create game", name => {
+    console.log("create game: "+name)
+    // Check if a game with this name exists
+    redis.exists(`game:${name}`, (err, result) => {
         if (result === 0) {
-            let sessionId = uuid();
-            console.log(sessionId);
-            redis.hmset(`session:${sessionId}`, "name", name);
-            redis.sadd(`sessionName:${name}`, sessionId);
-            socket.emit("created", sessionId);
-            redis.publish('messages', 'New session created');
+            redis.hmset(`game:${name}`, "playercount", 0, "state", "PRE_GAME");
+            redis.sadd(`games`, name);
+            socket.emit("created", name);
+            emitAllGames()
+            redis.publish('messages', 'New game created');
         } else {
-            socket.emit("errorMsg", "A session with that name already exists.");
+            socket.emit("errorMsg", "A game with that name already exists.");
         }
     })
   });
 
-  socket.on("join session", name => {
-    console.log(name);
-    redis.smembers(`sessionName:${name}`, (err, result) => {
+  socket.on("join game", name => {
+    console.log("join game: "+name)
+    redis.smembers(`game:${name}`, (err, result) => {
       if (result && result.length > 0) {
         socket.emit("joined", result[0]);
       } else {
-          socket.emit("errorMsg", `There is no session with the name "${name}"`);
+          socket.emit("errorMsg", `There is no game with the name "${name}"`);
       }
     });
   });
@@ -63,7 +64,20 @@ io.on("connection", socket => {
   socket.on("disconnect", () => {
     console.log("A user disconnected.");
   });
+
+  function emitAllGames(){
+    redis.smembers(`games`, (err, result) => {
+      let gamelist = []
+      if (result && result.length > 0) {
+        gamelist = result
+      }
+      socket.emit("gamelist", gamelist);
+    });
+  }
+
 });
+
+
 
 server.listen(port, () => {
   console.log(`Server listening on port ${port}`);
