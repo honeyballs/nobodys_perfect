@@ -41,10 +41,6 @@ class Lobby extends Component {
       </div>
     );
   }
-
-  renderGame(game){
-    return (<li>game</li>)
-  }
 }
 
 export default Lobby;
