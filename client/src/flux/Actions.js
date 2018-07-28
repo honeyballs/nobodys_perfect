@@ -2,26 +2,21 @@ import alt from './alt';
 
 class AppActions {
 
-    setGamename(name) {
-        return name
-    }
+    setPlayername(name){return name}
 
-    createGame(){
-      return true
-    }
+    setGamename(name) {return name}
 
-    joinGame(name){
-      return name
-    }
+    createGame(){return true}
 
-    setGames(games){
-      return games
-    }
+    joinGame(name){return name}
 
-    deleteGame(name){
-      console.log("dispatch", name)
-      return name
-    }
+    leaveGame(){return true}
+
+    setGames(games){return games}
+
+    deleteGame(name){return name}
+
+    setPlayers(players){return players}
 }
 
 export default alt.createActions(AppActions);

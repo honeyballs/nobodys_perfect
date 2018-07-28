@@ -19,22 +19,36 @@ socket.on("joined", function(game) {
   console.log("joined game: "+game);
 });
 
+socket.on("playerlist", function(players) {
+  console.log("set playerslist: "+players);
+  AppActions.setPlayers(players)
+});
+
 socket.on("errorMsg", function (msg) {
     console.log(msg);
 })
 
 class AppStore {
   constructor() {
+    this.playername = 'unknown'
     this.gamename = false
     this.games = []
+    this.players = []
 
     this.bindListeners({
+      setPlayername: AppActions.SET_PLAYERNAME,
       setGamename: AppActions.SET_GAMENAME,
       createGame: AppActions.CREATE_GAME,
       joinGame: AppActions.JOIN_GAME,
+      leaveGame: AppActions.LEAVE_GAME,
       setGames: AppActions.SET_GAMES,
       deleteGame: AppActions.DELETE_GAME,
+      setPlayers: AppActions.SET_PLAYERS,
     })
+  }
+
+  setPlayername(value){
+    this.playername = value
   }
 
   setGamename(value){
@@ -52,12 +66,21 @@ class AppStore {
 
   joinGame(name){
     let target = name || this.gamename
-    socket.emit("join game", target)
+    socket.emit("join game", {game: target, player: this.playername})
     this.setGamename(false)
+  }
+
+  leaveGame(){
+    console.log("LEAVE "+this.gamename)
+    socket.emit("leave game", {game: this.gamename, player: this.playername})
   }
 
   deleteGame(name){
     socket.emit("delete game", name)
+  }
+
+  setPlayers(players){
+    this.players = players
   }
 
 }

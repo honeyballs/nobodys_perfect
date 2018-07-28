@@ -9,14 +9,35 @@ class Game extends Component {
      super(props);
 
      this.state = {
-       gamename: props.match.params.name
+       gamename: props.match.params.name,
+       players: props.players,
      }
+     AppActions.setGamename(props.match.params.name)
+   }
+
+   leaveGame(){
+     AppActions.leaveGame()
+     this.props.history.push(`/`)
    }
 
   render() {
     return (
       <div id="game">
-        game {this.state.gamename}
+        <div id="game-pane">
+
+        </div>
+        <div id="player-list">
+          {this.state.players.map(player=>
+            <div>
+              <span>{player.name}</span> - <span>{player.score}</span>
+            </div>
+          )}
+        </div>
+        <div id="chat-bar">
+          <input type="text" />
+          <button>Absenden</button>
+        </div>
+        <button onClick={()=>{this.leaveGame()}}>Spiel verlassen</button>
       </div>
     );
   }

@@ -11,8 +11,10 @@ import Game from './components/Game'
 
 let getState = () => {
     return {
+        playername: AppStore.getState().playername,
         gamename: AppStore.getState().gamename,
         games: AppStore.getState().games,
+        players: AppStore.getState().players,
     }
 }
 
@@ -47,10 +49,10 @@ class App extends Component {
           </header>
           <Switch>
             <Route path="/game/:name">
-              <Game />
+              <Game players={this.state.players}/>
             </Route>
             <Route exact path="/">
-              <Lobby gamename={this.state.gamename} games={this.state.games}/>
+              <Lobby playername={this.state.playername} gamename={this.state.gamename} games={this.state.games}/>
             </Route>
           </Switch>
         </div>

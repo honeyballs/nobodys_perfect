@@ -26,6 +26,7 @@ class Lobby extends Component {
     return (
       <div id="lobby">
         <div id="games-box">
+          <input type="text" value={this.props.playername} onChange={(e)=>{AppActions.setPlayername(e.target.value)}}/>
           <input type="text" placeholder="Spielname" value={this.props.gamename || ""} onChange={(e)=>{AppActions.setGamename(e.target.value)}}/>
           <button onClick={AppActions.createGame}>anlegen</button>
           <div id="games-filters">
