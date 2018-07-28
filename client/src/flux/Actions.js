@@ -10,8 +10,8 @@ class AppActions {
       return true
     }
 
-    joinGame(){
-      return true
+    joinGame(name){
+      return name
     }
 
     setGames(games){

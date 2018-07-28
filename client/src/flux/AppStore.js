@@ -50,8 +50,9 @@ class AppStore {
     this.setGamename(false)
   }
 
-  joinGame(){
-    socket.emit("join game", this.gamename)
+  joinGame(name){
+    let target = name || this.gamename
+    socket.emit("join game", target)
     this.setGamename(false)
   }
 
