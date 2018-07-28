@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import { withRouter } from 'react-router-dom'
 
 import AppActions from '../flux/Actions';
 
@@ -11,6 +12,14 @@ class Lobby extends Component {
       filterName: "",
       filterNotRunning: false
      }
+   }
+
+   joinGame(name){
+     AppActions.joinGame(name)
+     //not a final solution for async:
+     setTimeout(()=>{
+       this.props.history.push(`/game/${name}`)
+     },200)
    }
 
   render() {
@@ -33,7 +42,7 @@ class Lobby extends Component {
             }).map(game=>
               <li>
                 {game.name} | {game.playercount} Spieler | {game.state}
-                <button onClick={()=>{AppActions.joinGame(game.name)}}>beitreten</button>
+                <button onClick={()=>{this.joinGame(game.name)}}>beitreten</button>
                 <button onClick={()=>{AppActions.deleteGame(game.name)}}>delete</button>
               </li>)}
           </ul>
@@ -43,4 +52,4 @@ class Lobby extends Component {
   }
 }
 
-export default Lobby;
+export default withRouter(Lobby);

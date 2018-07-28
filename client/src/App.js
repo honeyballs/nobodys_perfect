@@ -1,9 +1,11 @@
 import React, { Component } from 'react';
 import logo from './logo.svg';
 import './App.css';
+import { BrowserRouter, Route, Switch } from 'react-router-dom'
 
-import AppStore from './flux/AppStore';
-import Lobby from './components/Lobby';
+import AppStore from './flux/AppStore'
+import Lobby from './components/Lobby'
+import Game from './components/Game'
 
 
 
@@ -37,13 +39,22 @@ class App extends Component {
 
   render() {
     return (
-      <div className="App">
-        <header className="App-header">
-          <img src={logo} className="App-logo" alt="logo" />
-          <h1 className="App-title">Nobodys perfect</h1>
-        </header>
-        <Lobby gamename={this.state.gamename} games={this.state.games}/>
-      </div>
+      <BrowserRouter>
+        <div className="App">
+          <header className="App-header">
+            <img src={logo} className="App-logo" alt="logo" />
+            <h1 className="App-title">Nobodys perfect</h1>
+          </header>
+          <Switch>
+            <Route path="/game/:name">
+              <Game />
+            </Route>
+            <Route exact path="/">
+              <Lobby gamename={this.state.gamename} games={this.state.games}/>
+            </Route>
+          </Switch>
+        </div>
+      </BrowserRouter>
     );
   }
 }
