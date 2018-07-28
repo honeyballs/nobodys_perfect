@@ -13,7 +13,11 @@ class Lobby extends Component {
           <button onClick={AppActions.createGame}>anlegen</button>
           <button onClick={AppActions.joinGame}>beitreten</button>
           <ul>
-            {this.props.games.map(game=> <li>{game}</li>)}
+            {this.props.games.map(game=>
+              <li>
+                {game.name} | {game.playercount} Spieler | {game.state}
+                <button onClick={()=>{AppActions.deleteGame(game.name)}}>delete</button>
+              </li>)}
           </ul>
         </div>
       </div>

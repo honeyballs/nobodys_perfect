@@ -17,6 +17,11 @@ class AppActions {
     setGames(games){
       return games
     }
+
+    deleteGame(name){
+      console.log("dispatch", name)
+      return name
+    }
 }
 
 export default alt.createActions(AppActions);

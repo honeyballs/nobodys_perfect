@@ -33,6 +33,7 @@ class AppStore {
       createGame: AppActions.CREATE_GAME,
       joinGame: AppActions.JOIN_GAME,
       setGames: AppActions.SET_GAMES,
+      deleteGame: AppActions.DELETE_GAME,
     })
   }
 
@@ -52,6 +53,10 @@ class AppStore {
   joinGame(){
     socket.emit("join game", this.gamename)
     this.setGamename(false)
+  }
+
+  deleteGame(name){
+    socket.emit("delete game", name)
   }
 
 }

@@ -39,7 +39,7 @@ io.on("connection", socket => {
     // Check if a game with this name exists
     let result = await redis.exists(`game:${name}`)
     if (result === 0) {
-        redis.hmset(`game:${name}`, "playercount", 0, "state", "PRE_GAME");
+        redis.hmset(`game:${name}`, "name", name, "playercount", 0, "state", "PRE_GAME");
         redis.sadd(`games`, name);
         socket.emit("created", name);
         emitAllGames()
@@ -53,11 +53,21 @@ io.on("connection", socket => {
     console.log("join game: "+name)
       let result = await redis.hgetall(`game:${name}`)
       if (result && result.state) {
+        await redis.hincrby(`game:${name}`, "playercount", 1)
+        emitAllGames()
         socket.emit("joined", name);
       } else {
         socket.emit("errorMsg", `There is no game with the name "${name}"`);
       }
   });
+
+  socket.on("delete game", async name => {
+    console.log("delete game: "+name)
+    await redis.srem('games',name)
+    await redis.del(`game:${name}`)
+
+    emitAllGames()
+  })
 
   socket.on("disconnect", () => {
     console.log("A user disconnected.");
@@ -67,7 +77,10 @@ io.on("connection", socket => {
     let result = await redis.smembers(`games`)
     let gamelist = []
     if (result && result.length > 0) {
-      gamelist = result
+      let promises = result.map(name=>{
+        return redis.hgetall(`game:${name}`)
+      })
+      gamelist = await Promise.all(promises)
     }
     socket.emit("gamelist", gamelist);
   }
