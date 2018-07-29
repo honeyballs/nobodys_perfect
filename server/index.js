@@ -12,7 +12,7 @@ let redis = new Redis({ host: '192.168.99.100', password: "passwort" });
 let sub = new Redis({ host: '192.168.99.100', password: "passwort" });
 
 const DELIMITER = ':'
-const MIN_PLAYERCOUNT = 4
+const MIN_PLAYERCOUNT = 2
 const STATE_PRE_GAME = 'PRE_GAME'
 const STATE_RUNNING = 'RUNNING'
 const STATE_FINISHED = 'FINISHED'
@@ -102,7 +102,7 @@ io.on("connection", socket => {
     console.log("start game :"+name)
     await redis.hmset(`game${DELIMITER}${name}`, 'state', STATE_RUNNING)
     //TODO: only to room
-    io.emit("game started")
+    io.emit("game state change", STATE_RUNNING)
   }
 
   async function emitAllGames(){

@@ -18,6 +18,9 @@ class AppActions {
 
     setPlayers(players){return players}
 
+    setGamestate(state){return state}
+
+
     flushAll(){return true}
 }
 

@@ -24,6 +24,11 @@ socket.on("playerlist", function(players) {
   AppActions.setPlayers(players)
 });
 
+socket.on("game state change", function(state) {
+  console.log("game state changed: "+state);
+  AppActions.setGamestate(state)
+});
+
 socket.on("errorMsg", function (msg) {
     console.log(msg);
 })
@@ -34,6 +39,7 @@ class AppStore {
     this.gamename = false
     this.games = []
     this.players = []
+    this.gamestate = 'PRE_GAME'
 
     this.bindListeners({
       setPlayername: AppActions.SET_PLAYERNAME,
@@ -44,6 +50,7 @@ class AppStore {
       setGames: AppActions.SET_GAMES,
       deleteGame: AppActions.DELETE_GAME,
       setPlayers: AppActions.SET_PLAYERS,
+      setGamestate: AppActions.SET_GAMESTATE,
       flushAll: AppActions.FLUSH_ALL,
     })
   }
@@ -82,6 +89,10 @@ class AppStore {
 
   setPlayers(players){
     this.players = players
+  }
+
+  setGamestate(state){
+    this.gamestate = state
   }
 
   flushAll(){

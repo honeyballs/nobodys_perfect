@@ -11,12 +11,16 @@ class Game extends Component {
      this.state = {
        gamename: props.match.params.name,
        players: props.players,
+       gamestate: props.gamestate,
      }
      AppActions.setGamename(props.match.params.name)
    }
 
    componentWillReceiveProps(nextProps) {
-     this.setState({ players: nextProps.players });
+     this.setState({
+       players: nextProps.players,
+       gamestate: nextProps.gamestate,
+     });
    }
 
    leaveGame(){
@@ -28,7 +32,9 @@ class Game extends Component {
     return (
       <div id="game">
         <div id="game-pane">
-
+          {this.state.gamestate == 'PRE_GAME' && (
+            <span>...warten auf Spieler</span>
+          )}
         </div>
         <div id="player-list">
           {this.state.players.map(player=>
