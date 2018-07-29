@@ -38,7 +38,7 @@ class Lobby extends Component {
           <ul>
             {this.props.games.filter(game=>{
               if(this.state.filterName.length && !game.name.includes(this.state.filterName)) return false
-              if(this.state.filterNotRunning && !game.state == 'PRE_GAME') return false
+              if(this.state.filterNotRunning && game.state !== 'PRE_GAME') return false
               return true
             }).map(game=>
               <li>
