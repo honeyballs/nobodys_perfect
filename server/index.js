@@ -74,7 +74,7 @@ io.on("connection", socket => {
     console.log(`leave game ${params.game} as ${params.player}`)
     redis.srem(`playerlist${DELIMITER}${params.game}`, `${params.player}`)
     let count = await redis.hincrby(`game${DELIMITER}${params.game}`, "playercount", -1)
-    emitPlayerslist()
+    emitPlayerslist(params.game)
     emitAllGames()
     io.emit("left", params.game);
   });
@@ -95,7 +95,6 @@ io.on("connection", socket => {
   socket.on("flush all", () => {
     console.log("flush all");
     redis.flushall()
-    emitPlayerslist()
     emitAllGames()
   });
 
