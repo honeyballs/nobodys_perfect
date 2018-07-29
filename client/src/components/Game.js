@@ -14,6 +14,7 @@ class Game extends Component {
        round: props.round,
      }
      AppActions.setGamename(props.match.params.name)
+     AppActions.getRound(props.match.params.name)
    }
 
    componentWillReceiveProps(nextProps) {

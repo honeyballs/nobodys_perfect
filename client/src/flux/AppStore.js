@@ -60,6 +60,7 @@ class AppStore {
       deleteGame: AppActions.DELETE_GAME,
       setPlayers: AppActions.SET_PLAYERS,
       setRound: AppActions.SET_ROUND,
+      getRound: AppActions.GET_ROUND,
       flushAll: AppActions.FLUSH_ALL,
     })
   }
@@ -102,6 +103,10 @@ class AppStore {
 
   setRound(round){
     this.round = round
+  }
+  getRound(gamename){
+    let target = gamename || this.gamename
+    socket.emit('get round',{game: target})
   }
 
   flushAll(){

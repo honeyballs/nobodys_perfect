@@ -92,6 +92,11 @@ io.on("connection", socket => {
     emitAllGames()
   })
 
+  socket.on("get round", async params=>{
+    getRound(params.game)
+    emitPlayerslist(params.game)
+  })
+
   socket.on("disconnect", () => {
     console.log("A user disconnected.");
   });
@@ -116,7 +121,7 @@ io.on("connection", socket => {
   //if you join a game that has already started, get the current round
   async function getRound(name){
     let round = await redis.hmget(`game${DELIMITER}${name}`,'roundid', 'state', 'question')
-    if(round) socket.emit('round', {id: round.roundid, state: round.state, question: QUESTIONS[round.question].question})
+    if(round) socket.emit('round', {id: round[0], state: round[1], question: QUESTIONS[round[2]].question})
   }
 
   async function emitAllGames(){

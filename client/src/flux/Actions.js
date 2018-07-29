@@ -20,6 +20,8 @@ class AppActions {
 
     setRound(round){return round}
 
+    getRound(gamename){return gamename}
+
 
     flushAll(){return true}
 }
