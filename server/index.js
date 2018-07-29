@@ -47,11 +47,11 @@ io.on("connection", socket => {
     if (result === 0) {
         redis.hmset(`game${DELIMITER}${name}`, "name", name, "playercount", 0, "state", STATE_PRE_GAME);
         redis.sadd(`games`, name);
-        socket.emit("created", name);
+        io.emit("created", name);
         emitAllGames()
         redis.publish('messages', 'New game created');
     } else {
-        socket.emit("errorMsg", "A game with that name already exists.");
+        io.emit("errorMsg", "A game with that name already exists.");
     }
   });
 
@@ -64,9 +64,9 @@ io.on("connection", socket => {
         if(count == MIN_PLAYERCOUNT) await startGame(params.game)
         emitPlayerslist(params.game)
         emitAllGames()
-        socket.emit("joined", params.game);
+        io.emit("joined", params.game);
       } else {
-        socket.emit("errorMsg", `There is no game with the name "${name}"`);
+        io.emit("errorMsg", `There is no game with the name "${name}"`);
       }
   });
 
@@ -76,7 +76,7 @@ io.on("connection", socket => {
     let count = await redis.hincrby(`game${DELIMITER}${params.game}`, "playercount", -1)
     emitPlayerslist()
     emitAllGames()
-    socket.emit("left", params.game);
+    io.emit("left", params.game);
   });
 
   socket.on("delete game", async name => {
@@ -92,11 +92,18 @@ io.on("connection", socket => {
     console.log("A user disconnected.");
   });
 
+  socket.on("flush all", () => {
+    console.log("flush all");
+    redis.flushall()
+    emitPlayerslist()
+    emitAllGames()
+  });
+
   async function startGame(name){
     console.log("start game :"+name)
     await redis.hmset(`game${DELIMITER}${name}`, 'state', STATE_RUNNING)
     //TODO: only to room
-    socket.emit("game started")
+    io.emit("game started")
   }
 
   async function emitAllGames(){
@@ -108,11 +115,11 @@ io.on("connection", socket => {
       })
       gamelist = await Promise.all(promises)
     }
-    socket.emit("gamelist", gamelist);
+    io.emit("gamelist", gamelist);
   }
 
   async function emitPlayerslist(gamename){
-    let result = await redis.smembers(`playerlist${DELIMITER}${gamename}`)
+    let result = await getPlayerlist(gamename)
     let playerlist = []
     if(result && result.length > 0){
       playerlist = result.map(p=>{
@@ -120,7 +127,11 @@ io.on("connection", socket => {
       })
     }
     //TODO: only to room
-    socket.emit('playerlist', playerlist)
+    io.emit('playerlist', playerlist)
+  }
+
+  async function getPlayerlist(gamename){
+    return redis.smembers(`playerlist${DELIMITER}${gamename}`)
   }
 
 });

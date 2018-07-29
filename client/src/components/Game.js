@@ -15,6 +15,10 @@ class Game extends Component {
      AppActions.setGamename(props.match.params.name)
    }
 
+   componentWillReceiveProps(nextProps) {
+     this.setState({ players: nextProps.players });
+   }
+
    leaveGame(){
      AppActions.leaveGame()
      this.props.history.push(`/`)

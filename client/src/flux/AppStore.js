@@ -20,7 +20,7 @@ socket.on("joined", function(game) {
 });
 
 socket.on("playerlist", function(players) {
-  console.log("set playerslist: "+players);
+  console.log("set playerlist: "+players);
   AppActions.setPlayers(players)
 });
 
@@ -44,6 +44,7 @@ class AppStore {
       setGames: AppActions.SET_GAMES,
       deleteGame: AppActions.DELETE_GAME,
       setPlayers: AppActions.SET_PLAYERS,
+      flushAll: AppActions.FLUSH_ALL,
     })
   }
 
@@ -81,6 +82,10 @@ class AppStore {
 
   setPlayers(players){
     this.players = players
+  }
+
+  flushAll(){
+    socket.emit("flush all")
   }
 
 }

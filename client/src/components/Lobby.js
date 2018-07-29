@@ -48,6 +48,7 @@ class Lobby extends Component {
               </li>)}
           </ul>
         </div>
+        <button onClick={()=>{AppActions.flushAll()}}>Flush redis</button>
       </div>
     );
   }

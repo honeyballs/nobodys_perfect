@@ -17,6 +17,8 @@ class AppActions {
     deleteGame(name){return name}
 
     setPlayers(players){return players}
+
+    flushAll(){return true}
 }
 
 export default alt.createActions(AppActions);
