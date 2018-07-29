@@ -18,7 +18,7 @@ class AppActions {
 
     setPlayers(players){return players}
 
-    setGamestate(state){return state}
+    setRound(round){return round}
 
 
     flushAll(){return true}

@@ -11,7 +11,7 @@ class Game extends Component {
      this.state = {
        gamename: props.match.params.name,
        players: props.players,
-       gamestate: props.gamestate,
+       round: props.round,
      }
      AppActions.setGamename(props.match.params.name)
    }
@@ -19,7 +19,7 @@ class Game extends Component {
    componentWillReceiveProps(nextProps) {
      this.setState({
        players: nextProps.players,
-       gamestate: nextProps.gamestate,
+       round: nextProps.round,
      });
    }
 
@@ -32,8 +32,15 @@ class Game extends Component {
     return (
       <div id="game">
         <div id="game-pane">
-          {this.state.gamestate == 'PRE_GAME' && (
+          {this.state.round.state == 'PRE_GAME' && (
             <span>...warten auf Spieler</span>
+          )}
+
+          {this.state.round.state == 'SHOW_QUESTION' && (
+            <div className="question">
+              <h3>Runde {this.state.round.id}</h3>
+              <span>{this.state.round.question}</span>
+            </div>
           )}
         </div>
         <div id="player-list">

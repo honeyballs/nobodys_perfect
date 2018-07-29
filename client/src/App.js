@@ -15,7 +15,7 @@ let getState = () => {
         gamename: AppStore.getState().gamename,
         games: AppStore.getState().games,
         players: AppStore.getState().players,
-        gamestate: AppStore.getState().gamestate,
+        round: AppStore.getState().round,
     }
 }
 
@@ -50,7 +50,7 @@ class App extends Component {
           </header>
           <Switch>
             <Route path="/game/:name">
-              <Game players={this.state.players} gamestate={this.state.gamestate}/>
+              <Game players={this.state.players} round={this.state.round}/>
             </Route>
             <Route exact path="/">
               <Lobby playername={this.state.playername} gamename={this.state.gamename} games={this.state.games}/>

@@ -3,6 +3,7 @@ import http from "http";
 import socketio from "socket.io";
 import Redis from "ioredis";
 import uuid from "uuid/v1";
+import QUESTIONS from './questions'
 
 let app = express();
 let server = http.Server(app);
@@ -14,7 +15,10 @@ let sub = new Redis({ host: '192.168.99.100', password: "passwort" });
 const DELIMITER = ':'
 const MIN_PLAYERCOUNT = 2
 const STATE_PRE_GAME = 'PRE_GAME'
-const STATE_RUNNING = 'RUNNING'
+const STATE_SHOW_QUESTION = 'SHOW_QUESTION'
+const STATE_GATHER_ANSWERS = 'GATHER_ANSWERS'
+const STATE_VOTING = 'VOTING'
+const STATE_REVEAL = 'REVEAL'
 const STATE_FINISHED = 'FINISHED'
 
 // Use the given port:
@@ -100,9 +104,19 @@ io.on("connection", socket => {
 
   async function startGame(name){
     console.log("start game :"+name)
-    await redis.hmset(`game${DELIMITER}${name}`, 'state', STATE_RUNNING)
-    //TODO: only to room
-    io.emit("game state change", STATE_RUNNING)
+    startRound(name)
+  }
+
+  async function startRound(name){
+    let questionId = 0
+    await redis.hmset(`game${DELIMITER}${name}`, 'roundid', 0, 'state', STATE_SHOW_QUESTION, 'question', questionId)
+    io.emit('round start', {id: 0, state: STATE_SHOW_QUESTION, question: QUESTIONS[questionId].question})
+  }
+
+  //if you join a game that has already started, get the current round
+  async function getRound(name){
+    let round = await redis.hmget(`game${DELIMITER}${name}`,'roundid', 'state', 'question')
+    if(round) socket.emit('round', {id: round.roundid, state: round.state, question: QUESTIONS[round.question].question})
   }
 
   async function emitAllGames(){
