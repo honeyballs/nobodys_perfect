@@ -14,6 +14,7 @@ class Game extends Component {
        players: props.players,
        round: props.round,
        answer: "",
+       answerSubmitted: false,
      }
 
      const query = parse(this.props.location.search.substr(1))
@@ -21,14 +22,17 @@ class Game extends Component {
 
      AppActions.setGamename(props.match.params.name)
      AppActions.getRound(props.match.params.name)
+     //TODO verhindern dass durch page refresh ein nutzer mehrere antworten abschicken kann
    }
 
    componentWillReceiveProps(nextProps) {
+
      this.setState({
        players: nextProps.players,
        round: nextProps.round,
      });
    }
+
 
    setAnswer(e){
      this.setState({answer: e.target.value})
@@ -37,6 +41,7 @@ class Game extends Component {
    submitAnswer(){
      //TODO: Validate input value
      AppActions.submitAnswer(this.state.answer)
+     this.setState({answerSubmitted: true})
    }
 
    leaveGame(){
@@ -60,6 +65,9 @@ class Game extends Component {
           )}
         </div>
         <div id="player-list">
+          {this.state.round.state == 'SHOW_QUESTION' && (
+            <span>({this.state.round.answers.length}/{this.state.players.length} Spielern haben geantwortet)</span>
+          )}
           {this.state.players.map(player=>
             <div>
               <span>{player.name}</span> - <span>{player.score}</span>
@@ -68,7 +76,7 @@ class Game extends Component {
         </div>
         <div id="chat-bar">
           <input type="text" onChange={(e)=>{this.setAnswer(e)}} value={this.state.answer}/>
-          <button onClick={()=>{this.submitAnswer()}}>Absenden</button>
+          <button disabled={this.state.answerSubmitted} onClick={()=>{this.submitAnswer()}}>Absenden</button>
         </div>
         <button onClick={()=>{this.leaveGame()}}>Spiel verlassen</button>
       </div>

@@ -9,8 +9,8 @@ let app = express();
 let server = http.Server(app);
 let io = socketio(server);
 
-let redis = new Redis({ host: '127.0.0.1', password: "passwort" });
-let sub = new Redis({ host: '127.0.0.1', password: "passwort" });
+let redis = new Redis({ host: '192.168.99.100', password: "passwort" });
+let sub = new Redis({ host: '192.168.99.100', password: "passwort" });
 
 const DELIMITER = ':'
 const MIN_PLAYERCOUNT = 2
@@ -40,13 +40,13 @@ sub.on('message', (channel, message) => {
 
     if (message.startsWith('ROUND_START')) {
       let params = message.split(`${DELIMITER}`);
+      //TODO: clear answers of players
       // Params are message, name, id, questionId. Maybe implement keys?
-      io.to(params[1]).emit('round start', {id: params[2], state: STATE_SHOW_QUESTION, question: QUESTIONS[Number(params[3])].question})
+      io.to(params[1]).emit('round start', {id: params[2], state: STATE_SHOW_QUESTION, question: QUESTIONS[Number(params[3])].question, answers: []})
     }
 
     if (message.startsWith('PLAYERLIST')) {
       let params = message.split('|');
-      console.log(params);
       // Params are name, playerlist as JSON
       io.to(params[1]).emit('playerlist', JSON.parse(params[2]));
     }
@@ -109,6 +109,7 @@ io.on("connection", socket => {
   })
 
   socket.on("get round", async params=>{
+    if(!socket.rooms[params.game]) socket.join(params.game);
     getRound(params.game)
     emitPlayerslist(params.game)
   })
@@ -144,7 +145,8 @@ io.on("connection", socket => {
   //if you join a game that has already started, get the current round
   async function getRound(name){
     let round = await redis.hmget(`game${DELIMITER}${name}`,'roundid', 'state', 'question')
-    if(round) socket.emit('round', {id: round[0] || 0, state: round[1], question: QUESTIONS[round[2] || 0].question})
+    let answers = await getAnswerlist(name)
+    if(round) socket.emit('round', {id: round[0] || 0, state: round[1], question: QUESTIONS[round[2] || 0].question, answers: answers})
   }
 
   async function emitAllGames(){
