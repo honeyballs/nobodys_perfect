@@ -121,7 +121,7 @@ io.on("connection", socket => {
   //if you join a game that has already started, get the current round
   async function getRound(name){
     let round = await redis.hmget(`game${DELIMITER}${name}`,'roundid', 'state', 'question')
-    if(round) socket.emit('round', {id: round[0], state: round[1], question: QUESTIONS[round[2]].question})
+    if(round) socket.emit('round', {id: round[0] || 0, state: round[1], question: QUESTIONS[round[2] || 0].question})
   }
 
   async function emitAllGames(){
