@@ -1,5 +1,4 @@
 import React, { Component } from 'react';
-import logo from './logo.svg';
 import './App.css';
 import { BrowserRouter, Route, Switch } from 'react-router-dom'
 
@@ -45,8 +44,7 @@ class App extends Component {
       <BrowserRouter>
         <div className="App">
           <header className="App-header">
-            <img src={logo} className="App-logo" alt="logo" />
-            <h1 className="App-title">Nobodys perfect</h1>
+            <h1 className="App-title">Nobody's perfect</h1>
           </header>
           <Switch>
             <Route path="/game/:name">
