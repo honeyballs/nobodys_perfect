@@ -26,7 +26,7 @@ class Game extends Component {
    }
 
    componentWillReceiveProps(nextProps) {
-
+     if(nextProps.round.state == 'VOTING' && this.state.round.state != 'VOTING') this.votingStarted()
      this.setState({
        players: nextProps.players,
        round: nextProps.round,
@@ -44,6 +44,15 @@ class Game extends Component {
      this.setState({answerSubmitted: true})
    }
 
+   votingStarted(){
+     this.setState({answerSubmitted: false})
+   }
+
+   submitVote(vote){
+     AppActions.submitVote(vote)
+     this.setState({answerSubmitted: true})
+   }
+
    leaveGame(){
      AppActions.leaveGame()
      this.props.history.push(`/`)
@@ -58,9 +67,32 @@ class Game extends Component {
           )}
 
           {this.state.round.state == 'SHOW_QUESTION' && (
-            <div className="question">
-              <h3>Runde {this.state.round.id}</h3>
-              <span>{this.state.round.question}</span>
+            <div>
+              <div className="question">
+                <h3>Runde {this.state.round.id}</h3>
+                <span>{this.state.round.question}</span>
+              </div>
+              <div id="chat-bar">
+                <input type="text" onChange={(e)=>{this.setAnswer(e)}} value={this.state.answer}/>
+                <button disabled={this.state.answerSubmitted} onClick={()=>{this.submitAnswer()}}>Absenden</button>
+              </div>
+            </div>
+          )}
+
+          {this.state.round.state == 'VOTING' && (
+            <div>
+              <div className="question">
+                <h3>Runde {this.state.round.id}</h3>
+                <span>{this.state.round.question}</span>
+              </div>
+              <div className="voting">
+                {this.state.round.answers.map((answer,i)=>
+                  <div>
+                    <input disabled={this.state.answerSubmitted} type="radio" name="voting" id="voting-check-{i}" onChange={(e)=>{this.submitVote(answer)}}/>
+                    <label for="voting-check-{i}">{answer}</label>
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </div>
@@ -73,10 +105,6 @@ class Game extends Component {
               <span>{player.name}</span> - <span>{player.score}</span>
             </div>
           )}
-        </div>
-        <div id="chat-bar">
-          <input type="text" onChange={(e)=>{this.setAnswer(e)}} value={this.state.answer}/>
-          <button disabled={this.state.answerSubmitted} onClick={()=>{this.submitAnswer()}}>Absenden</button>
         </div>
         <button onClick={()=>{this.leaveGame()}}>Spiel verlassen</button>
       </div>

@@ -69,6 +69,7 @@ class AppStore {
       getRound: AppActions.GET_ROUND,
       setAnswers: AppActions.SET_ANSWERS,
       submitAnswer: AppActions.SUBMIT_ANSWER,
+      submitVote: AppActions.SUBMIT_VOTE,
       flushAll: AppActions.FLUSH_ALL,
     })
   }
@@ -123,6 +124,11 @@ class AppStore {
   submitAnswer(answer){
     console.log("submit answer: "+answer)
     socket.emit('set answer', {game: this.gamename, player:this.playername,  answer: answer})
+  }
+
+  submitVote(vote){
+    console.log("submit vote: "+vote)
+    socket.emit('set vote', {game: this.gamename, player:this.playername,  answer: vote})
   }
 
   flushAll(){

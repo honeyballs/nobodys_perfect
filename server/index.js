@@ -132,6 +132,17 @@ io.on("connection", socket => {
     }
   })
 
+  socket.on("set vote", async params=>{
+    //playername als id ausreichend?
+    console.log(params.player+"voted: "+params.answer+" in "+params.game)
+    await redis.hmset(`player${DELIMITER}${params.player}${DELIMITER}${params.game}`, 'vote', params.answer)
+    let voting = await emitVoting(params.game)
+    let players = await getPlayerlist(params.game)
+    if(voting.sum == players.length){
+      //TODO:END VOTE
+    }
+  })
+
   socket.on("disconnect", () => {
     console.log("A user disconnected.");
   });
@@ -162,7 +173,8 @@ io.on("connection", socket => {
   async function getRound(name){
     let round = await redis.hmget(`game${DELIMITER}${name}`,'roundid', 'state', 'question')
     let answers = await getAnswerlist(name)
-    if(round) socket.emit('round', {id: round[0] || 0, state: round[1], question: QUESTIONS[round[2] || 0].question, answers: answers})
+    let voting = await getVoting(name)
+    if(round) socket.emit('round', {id: round[0] || 0, state: round[1], question: QUESTIONS[round[2] || 0].question, answers: answers, voting: voting})
   }
 
   async function emitAllGames(){
@@ -225,6 +237,44 @@ io.on("connection", socket => {
       })
       await Promise.all(promises)
     }
+  }
+
+  async function emitVoting(gamename){
+    let result = await getVoting(gamename)
+    //TODO; nur an channel
+    io.emit('voting', result)
+    return result
+  }
+
+  async function getVoting(gamename){
+    let playerlist = await getPlayerlist(gamename)
+    let voting = {
+      sum: 0,
+      answers: []
+    }
+    let result = await getAnswerlist(gamename)
+    voting.answers = result.map((answer)=>{
+      return {answer: answer, count: 0}
+    })
+    if (playerlist && playerlist.length > 0) {
+      let promises = playerlist.map(name=>{
+        return redis.hgetall(`player${DELIMITER}${name}${DELIMITER}${gamename}`)
+      })
+      let players = await Promise.all(promises)
+      players.forEach(player=>{
+        if(player.vote && player.vote.length){
+          let match = -1
+          voting.answers.forEach((a,i)=>{
+            if(a.answer == player.vote) match = i
+          })
+          if(match != -1){
+            voting.answers[match].count ++
+            voting.sum ++
+          }
+        }
+      })
+    }
+    return voting
   }
 
 });
