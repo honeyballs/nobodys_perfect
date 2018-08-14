@@ -34,6 +34,11 @@ socket.on("round", function(round){
   AppActions.setRound(round)
 })
 
+socket.on("answerlist", function(answers){
+  console.log("set answerlist: "+answers)
+  AppActions.setAnswers(answers)
+})
+
 socket.on("errorMsg", function (msg) {
     console.log(msg);
 })
@@ -48,6 +53,7 @@ class AppStore {
       id: -1,
       state: 'PRE_GAME',
       question: "",
+      answers: [],
     }
 
     this.bindListeners({
@@ -61,6 +67,8 @@ class AppStore {
       setPlayers: AppActions.SET_PLAYERS,
       setRound: AppActions.SET_ROUND,
       getRound: AppActions.GET_ROUND,
+      setAnswers: AppActions.SET_ANSWERS,
+      submitAnswer: AppActions.SUBMIT_ANSWER,
       flushAll: AppActions.FLUSH_ALL,
     })
   }
@@ -107,6 +115,13 @@ class AppStore {
   getRound(gamename){
     let target = gamename || this.gamename
     socket.emit('get round',{game: target})
+  }
+  setAnswers(answers){
+    this.round = {...this.round, answers}
+  }
+  submitAnswer(answer){
+    console.log("submit answer: "+answer)
+    socket.emit('set answer', {game: this.gamename, player:this.playername,  answer: answer})
   }
 
   flushAll(){

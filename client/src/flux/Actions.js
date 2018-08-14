@@ -1,29 +1,4 @@
 import alt from './alt';
 
-class AppActions {
-
-    setPlayername(name){return name}
-
-    setGamename(name) {return name}
-
-    createGame(){return true}
-
-    joinGame(name){return name}
-
-    leaveGame(){return true}
-
-    setGames(games){return games}
-
-    deleteGame(name){return name}
-
-    setPlayers(players){return players}
-
-    setRound(round){return round}
-
-    getRound(gamename){return gamename}
-
-
-    flushAll(){return true}
-}
-
-export default alt.createActions(AppActions);
+ export default alt.generateActions("setPlayername", "setGamename", "createGame", "joinGame", "leaveGame", "setGames", "deleteGame",
+   "setPlayers", "setRound", "getRound", "setAnswers", "submitAnswer", "flushAll");

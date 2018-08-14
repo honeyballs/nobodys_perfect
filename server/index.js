@@ -97,6 +97,13 @@ io.on("connection", socket => {
     emitPlayerslist(params.game)
   })
 
+  socket.on("set answer", async params=>{
+    //playername als id ausreichend?
+    console.log("PLAYERNAME: "+params.player)
+    await redis.hmset(`player${DELIMITER}${params.player}`, 'answer', params.answer)
+    emitAnswers(params.game)
+  })
+
   socket.on("disconnect", () => {
     console.log("A user disconnected.");
   });
@@ -150,6 +157,29 @@ io.on("connection", socket => {
 
   async function getPlayerlist(gamename){
     return redis.smembers(`playerlist${DELIMITER}${gamename}`)
+  }
+
+  async function emitAnswers(gamename){
+    let result = await getAnswerlist(gamename)
+    io.emit('answerlist', result)
+  }
+
+  async function getAnswerlist(gamename){
+    let playerlist = await getPlayerlist(gamename)
+    let answers = []
+    //TODO: add correct answer
+    if (playerlist && playerlist.length > 0) {
+      let promises = playerlist.map(name=>{
+        return redis.hgetall(`player${DELIMITER}${name}`)
+      })
+      let players = await Promise.all(promises)
+      players.forEach(player=>{
+        if(player.answer && player.answer.length) answers.push(player.answer)
+      })
+    }
+
+    //TODO randomize order
+    return answers
   }
 
 });

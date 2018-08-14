@@ -18,7 +18,7 @@ class Lobby extends Component {
      AppActions.joinGame(name)
      //not a final solution for async:
      setTimeout(()=>{
-       this.props.history.push(`/game/${name}`)
+       this.props.history.push(`/game/${name}?playername=${this.props.playername}`)
      },200)
    }
 
