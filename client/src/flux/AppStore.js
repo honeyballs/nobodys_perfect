@@ -24,8 +24,8 @@ socket.on("playerlist", function(players) {
   AppActions.setPlayers(players)
 });
 
-socket.on("round start", function(round){
-  console.log("round started: "+round)
+socket.on("round updated", function(round){
+  console.log("round updated: "+round)
   AppActions.setRound(round)
 })
 
@@ -110,7 +110,8 @@ class AppStore {
   }
 
   setRound(round){
-    this.round = round
+    console.log("set round", round)
+    this.round = {...this.round, ...round}
   }
   getRound(gamename){
     let target = gamename || this.gamename

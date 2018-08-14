@@ -16,7 +16,6 @@ const DELIMITER = ':'
 const MIN_PLAYERCOUNT = 2
 const STATE_PRE_GAME = 'PRE_GAME'
 const STATE_SHOW_QUESTION = 'SHOW_QUESTION'
-const STATE_GATHER_ANSWERS = 'GATHER_ANSWERS'
 const STATE_VOTING = 'VOTING'
 const STATE_REVEAL = 'REVEAL'
 const STATE_FINISHED = 'FINISHED'
@@ -42,13 +41,18 @@ sub.on('message', (channel, message) => {
       let params = message.split(`${DELIMITER}`);
       //TODO: clear answers of players
       // Params are message, name, id, questionId. Maybe implement keys?
-      io.to(params[1]).emit('round start', {id: params[2], state: STATE_SHOW_QUESTION, question: QUESTIONS[Number(params[3])].question, answers: []})
+      io.to(params[1]).emit('round updated', {id: params[2], state: STATE_SHOW_QUESTION, question: QUESTIONS[Number(params[3])].question, answers: []})
     }
 
     if (message.startsWith('PLAYERLIST')) {
       let params = message.split('|');
       // Params are name, playerlist as JSON
       io.to(params[1]).emit('playerlist', JSON.parse(params[2]));
+    }
+
+    if (message.startsWith('VOTING_START')) {
+      let params = message.split(`${DELIMITER}`);
+      io.to(params[1]).emit('round updated', {state: STATE_VOTING});
     }
 
 })
@@ -91,7 +95,9 @@ io.on("connection", socket => {
 
   socket.on("leave game", async params => {
     console.log(`leave game ${params.game} as ${params.player}`)
+    redis.del(`player${DELIMITER}${params.player}${DELIMITER}${params.game}`)
     redis.srem(`playerlist${DELIMITER}${params.game}`, `${params.player}`)
+    emitAnswers(params.game)
     let count = await redis.hincrby(`game${DELIMITER}${params.game}`, "playercount", -1)
     emitPlayerslist(params.game)
     emitAllGames();
@@ -104,6 +110,7 @@ io.on("connection", socket => {
     await redis.srem('games',name)
     await redis.del(`playerlist${DELIMITER}${name}`)
     await redis.del(`game:${name}`)
+    resetAnswersForPlayerlist(name)
 
     emitAllGames()
   })
@@ -116,9 +123,13 @@ io.on("connection", socket => {
 
   socket.on("set answer", async params=>{
     //playername als id ausreichend?
-    console.log("PLAYERNAME: "+params.player)
-    await redis.hmset(`player${DELIMITER}${params.player}`, 'answer', params.answer)
-    emitAnswers(params.game)
+    console.log(params.player+"answered: "+params.answer+" in "+params.game)
+    await redis.hmset(`player${DELIMITER}${params.player}${DELIMITER}${params.game}`, 'answer', params.answer)
+    let answers = await emitAnswers(params.game)
+    let players = await getPlayerlist(params.game)
+    if(answers.length == players.length){
+      startVote(params.game)
+    }
   })
 
   socket.on("disconnect", () => {
@@ -140,6 +151,11 @@ io.on("connection", socket => {
     let questionId = 0
     await redis.hmset(`game${DELIMITER}${name}`, 'roundid', 0, 'state', STATE_SHOW_QUESTION, 'question', questionId)
     redis.publish('messages', `ROUND_START${DELIMITER}${name}${DELIMITER}0${DELIMITER}${questionId}`);
+  }
+
+  async function startVote(name){
+    await redis.hmset(`game${DELIMITER}${name}`, 'state', STATE_VOTING)
+    redis.publish('messages', `VOTING_START${DELIMITER}${name}`)
   }
 
   //if you join a game that has already started, get the current round
@@ -169,7 +185,6 @@ io.on("connection", socket => {
         return {name: p, score: 0}
       })
     }
-    //TODO: only to room
     redis.publish('messages', `PLAYERLIST|${gamename}|${JSON.stringify(playerlist)}`);
   }
 
@@ -179,7 +194,9 @@ io.on("connection", socket => {
 
   async function emitAnswers(gamename){
     let result = await getAnswerlist(gamename)
+    //TODO; nur an channel
     io.emit('answerlist', result)
+    return result
   }
 
   async function getAnswerlist(gamename){
@@ -188,7 +205,7 @@ io.on("connection", socket => {
     //TODO: add correct answer
     if (playerlist && playerlist.length > 0) {
       let promises = playerlist.map(name=>{
-        return redis.hgetall(`player${DELIMITER}${name}`)
+        return redis.hgetall(`player${DELIMITER}${name}${DELIMITER}${gamename}`)
       })
       let players = await Promise.all(promises)
       players.forEach(player=>{
@@ -198,6 +215,16 @@ io.on("connection", socket => {
 
     //TODO randomize order
     return answers
+  }
+
+  async function resetAnswersForPlayerlist(gamename){
+    let playerlist = await getPlayerlist(gamename)
+    if (playerlist && playerlist.length > 0) {
+      let promises = playerlist.map(name=>{
+        return redis.del(`player${DELIMITER}${name}${DELIMITER}gamename`)
+      })
+      await Promise.all(promises)
+    }
   }
 
 });
