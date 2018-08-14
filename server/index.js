@@ -9,8 +9,8 @@ let app = express();
 let server = http.Server(app);
 let io = socketio(server);
 
-let redis = new Redis({ host: '192.168.99.100', password: "passwort" });
-let sub = new Redis({ host: '192.168.99.100', password: "passwort" });
+let redis = new Redis({ host: '127.0.0.1', password: "passwort" });
+let sub = new Redis({ host: '127.0.0.1', password: "passwort" });
 
 const DELIMITER = ':'
 const MIN_PLAYERCOUNT = 2
@@ -37,6 +37,20 @@ sub.subscribe('messages', (err, count) => {
 sub.on('message', (channel, message) => {
     console.log(`Received message "${message}" from channel "${channel}".`);
     // Implement actions
+
+    if (message.startsWith('ROUND_START')) {
+      let params = message.split(`${DELIMITER}`);
+      // Params are message, name, id, questionId. Maybe implement keys?
+      io.to(params[1]).emit('round start', {id: params[2], state: STATE_SHOW_QUESTION, question: QUESTIONS[Number(params[3])].question})
+    }
+
+    if (message.startsWith('PLAYERLIST')) {
+      let params = message.split('|');
+      console.log(params);
+      // Params are name, playerlist as JSON
+      io.to(params[1]).emit('playerlist', JSON.parse(params[2]));
+    }
+
 })
 
 io.on("connection", socket => {
@@ -52,7 +66,7 @@ io.on("connection", socket => {
         redis.hmset(`game${DELIMITER}${name}`, "name", name, "playercount", 0, "state", STATE_PRE_GAME);
         redis.sadd(`games`, name);
         io.emit("created", name);
-        emitAllGames()
+        emitAllGames();
         redis.publish('messages', 'New game created');
     } else {
         io.emit("errorMsg", "A game with that name already exists.");
@@ -65,9 +79,10 @@ io.on("connection", socket => {
       if (result && result.state) {
         redis.sadd(`playerlist${DELIMITER}${params.game}`, `${params.player}`)
         let count = await redis.hincrby(`game${DELIMITER}${params.game}`, "playercount", 1)
-        if(count == MIN_PLAYERCOUNT) await startGame(params.game)
+        if(count === MIN_PLAYERCOUNT) await startGame(params.game)
         emitPlayerslist(params.game)
-        emitAllGames()
+        emitAllGames();
+        socket.join(params.game);
         io.emit("joined", params.game);
       } else {
         io.emit("errorMsg", `There is no game with the name "${name}"`);
@@ -79,7 +94,8 @@ io.on("connection", socket => {
     redis.srem(`playerlist${DELIMITER}${params.game}`, `${params.player}`)
     let count = await redis.hincrby(`game${DELIMITER}${params.game}`, "playercount", -1)
     emitPlayerslist(params.game)
-    emitAllGames()
+    emitAllGames();
+    socket.leave(params.game);
     io.emit("left", params.game);
   });
 
@@ -115,12 +131,13 @@ io.on("connection", socket => {
   async function startRound(name){
     let questionId = 0
     await redis.hmset(`game${DELIMITER}${name}`, 'roundid', 0, 'state', STATE_SHOW_QUESTION, 'question', questionId)
-    io.emit('round start', {id: 0, state: STATE_SHOW_QUESTION, question: QUESTIONS[questionId].question})
+    redis.publish('messages', `ROUND_START${DELIMITER}${name}${DELIMITER}0${DELIMITER}${questionId}`);
   }
 
   //if you join a game that has already started, get the current round
   async function getRound(name){
-    let round = await redis.hmget(`game${DELIMITER}${name}`,'roundid', 'state', 'question')
+    let round = await redis.hmget(`game${DELIMITER}${name}`,'roundid', 'state', 'question');
+    console.log(round);
     if(round) socket.emit('round', {id: round[0], state: round[1], question: QUESTIONS[round[2]].question})
   }
 
@@ -145,7 +162,7 @@ io.on("connection", socket => {
       })
     }
     //TODO: only to room
-    io.emit('playerlist', playerlist)
+    redis.publish('messages', `PLAYERLIST|${gamename}|${JSON.stringify(playerlist)}`);
   }
 
   async function getPlayerlist(gamename){
@@ -153,8 +170,6 @@ io.on("connection", socket => {
   }
 
 });
-
-
 
 server.listen(port, () => {
   console.log(`Server listening on port ${port}`);
