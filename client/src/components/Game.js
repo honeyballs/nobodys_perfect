@@ -98,6 +98,17 @@ class Game extends Component {
               </div>
             </div>
           )}
+          {this.state.round.state == 'REVEAL' && (
+            <div>
+              <div className="question">
+                <h3>Runde {this.state.round.id}</h3>
+                <span>{this.state.round.question}</span>
+              </div>
+              <div className="reveal">
+                Auswertung
+              </div>
+            </div>
+          )}
         </div>
         <div id="player-list">
           {this.state.round.state == 'SHOW_QUESTION' && (

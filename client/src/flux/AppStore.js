@@ -11,14 +11,6 @@ socket.on("gamelist", function(games) {
   AppActions.setGames(games)
 });
 
-socket.on("created", function(game) {
-  console.log("created game: "+game);
-});
-
-socket.on("joined", function(game) {
-  console.log("joined game: "+game);
-});
-
 socket.on("playerlist", function(players) {
   console.log("set playerlist: "+players);
   AppActions.setPlayers(players)
