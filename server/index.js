@@ -73,7 +73,6 @@ io.on("connection", socket => {
     if (result === 0) {
         redis.hmset(`game${DELIMITER}${name}`, "name", name, "playercount", 0, "state", STATE_PRE_GAME);
         redis.sadd(`games`, name);
-        io.emit("created", name);
         emitAllGames();
         redis.publish('messages', 'New game created');
     } else {
@@ -83,15 +82,14 @@ io.on("connection", socket => {
 
   socket.on("join game", async params => {
     console.log(`join game ${params.game} as ${params.player}`)
+      socket.join(params.game);
       let result = await redis.hgetall(`game${DELIMITER}${params.game}`)
       if (result && result.state) {
         redis.sadd(`playerlist${DELIMITER}${params.game}`, `${params.player}`)
         let count = await redis.hincrby(`game${DELIMITER}${params.game}`, "playercount", 1)
         if(count === MIN_PLAYERCOUNT) await startGame(params.game)
-        emitPlayerslist(params.game)
+        emitPlayerlist(params.game)
         emitAllGames();
-        socket.join(params.game);
-        io.emit("joined", params.game);
       } else {
         io.emit("errorMsg", `There is no game with the name "${name}"`);
       }
@@ -103,7 +101,7 @@ io.on("connection", socket => {
     redis.srem(`playerlist${DELIMITER}${params.game}`, `${params.player}`)
     emitAnswers(params.game)
     let count = await redis.hincrby(`game${DELIMITER}${params.game}`, "playercount", -1)
-    emitPlayerslist(params.game)
+    emitPlayerlist(params.game)
     emitAllGames();
     socket.leave(params.game);
     io.emit("left", params.game);
@@ -122,7 +120,7 @@ io.on("connection", socket => {
   socket.on("get round", async params=>{
     if(!socket.rooms[params.game]) socket.join(params.game);
     getRound(params.game)
-    emitPlayerslist(params.game)
+    emitPlayerlist(params.game)
   })
 
   socket.on("set answer", async params=>{
@@ -131,7 +129,7 @@ io.on("connection", socket => {
     await redis.hmset(`player${DELIMITER}${params.player}${DELIMITER}${params.game}`, 'answer', params.answer)
     let answers = await emitAnswers(params.game)
     let players = await getPlayerlist(params.game)
-    if(answers.length == players.length){
+    if((answers.length-1) == players.length){
       startVote(params.game)
     }
   })
@@ -144,7 +142,7 @@ io.on("connection", socket => {
     let players = await getPlayerlist(params.game)
     console.log(voting.sum+" of "+players.length+" votes")
     if(voting.sum == players.length){
-      startReveal(params.game)
+      startReveal(params.game, voting)
     }
   })
 
@@ -174,7 +172,8 @@ io.on("connection", socket => {
     redis.publish('messages', `VOTING_START${DELIMITER}${name}`)
   }
 
-  async function startReveal(name){
+  async function startReveal(name, voting){
+    await evaluate(name, voting)
     await redis.hmset(`game${DELIMITER}${name}`, 'state', STATE_REVEAL)
     redis.publish('messages', `REVEAL_START${DELIMITER}${name}`)
   }
@@ -199,7 +198,7 @@ io.on("connection", socket => {
     io.emit("gamelist", gamelist);
   }
 
-  async function emitPlayerslist(gamename){
+  async function emitPlayerlist(gamename){
     let result = await getPlayerlist(gamename)
     let playerlist = []
     if(result && result.length > 0){
@@ -285,6 +284,11 @@ io.on("connection", socket => {
       })
     }
     return voting
+  }
+
+  async function evaluate(gamename){
+    let playerlist = await getPlayerlist(gamename)
+
   }
 
 });
