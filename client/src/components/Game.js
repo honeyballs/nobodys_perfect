@@ -93,8 +93,8 @@ class Game extends Component {
               <div className="voting">
                 {this.state.round.answers.map((answer,i)=>
                   <div>
-                    <input checked={answer === this.props.ownVote}  disabled={this.props.ownVote} type="radio" name="voting" id="voting-check-{i}" onChange={(e)=>{this.submitVote(answer)}}/>
-                    <label for="voting-check-{i}">{answer}</label>
+                    <input checked={answer === this.props.ownVote}  disabled={this.props.ownVote} type="radio" name="voting" id={'voting-check-'+i} onChange={(e)=>{this.submitVote(answer)}}/>
+                    <label for={'voting-check-'+i}>{answer}</label>
                   </div>
                 )}
               </div>
