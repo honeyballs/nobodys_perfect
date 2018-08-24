@@ -132,12 +132,6 @@ io.on("connection", socket => {
     emitAllGames()
   })
 
-  socket.on("get round", async params=>{
-    if(!socket.rooms[params.game]) socket.join(params.game);
-    getRound(params.game)
-    emitPlayerlist(params.game)
-  })
-
   socket.on("set answer", async params=>{
     //playername als id ausreichend?
     console.log(params.player+" answered: "+params.answer+" in "+params.game)
@@ -161,6 +155,26 @@ io.on("connection", socket => {
     }
   })
 
+  socket.on("gamestate", async params =>{
+    console.log(params.player+" requested gamestate for "+params.game)
+    let round = await redis.hmgetall(`game${DELIMITER}${params.game}`,'roundid', 'state', 'question')
+
+    let answers = await getAnswerlist(name)
+    let voting = await getVoting(name)
+    let player = await redis.hmget(`player${DELIMITER}${params.player}${DELIMITER}${params.game}`, 'answer','voting')
+    if(round){
+      round.question = QUESTIONS[round.question].question
+      round.answers = answers
+      round.voting = voting
+    }
+    //TODO: Auswertungsobjekt ergänzen
+    socket.emit('gamestate', {
+      round: round,
+      answer: player[0],
+      vote: player[1],
+    })
+  })
+
   socket.on("disconnect", () => {
     console.log("A user disconnected.");
   });
@@ -177,6 +191,7 @@ io.on("connection", socket => {
   }
 
   async function startRound(name){
+    //TODO: answer und vote aus letzter Runde resetten
     let questionId = 0
     await redis.hmset(`game${DELIMITER}${name}`, 'roundid', 0, 'state', STATE_SHOW_QUESTION, 'question', questionId)
     redis.publish('messages', `ROUND_START${DELIMITER}${name}${DELIMITER}0${DELIMITER}${questionId}`);
@@ -191,14 +206,6 @@ io.on("connection", socket => {
     await evaluate(name, voting)
     await redis.hmset(`game${DELIMITER}${name}`, 'state', STATE_REVEAL)
     redis.publish('messages', `REVEAL_START${DELIMITER}${name}`)
-  }
-
-  //if you join a game that has already started, get the current round
-  async function getRound(name){
-    let round = await redis.hmget(`game${DELIMITER}${name}`,'roundid', 'state', 'question')
-    let answers = await getAnswerlist(name)
-    let voting = await getVoting(name)
-    if(round) socket.emit('round', {id: round[0] || 0, state: round[1], question: QUESTIONS[round[2] || 0].question, answers: answers, voting: voting})
   }
 
   async function emitAllGames(){
