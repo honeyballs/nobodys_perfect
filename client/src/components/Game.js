@@ -22,6 +22,9 @@ class Game extends Component {
 
      AppActions.setGamename(props.match.params.name)
      AppActions.getRound(props.match.params.name)
+
+    AppActions.getPlayerInfo({playername: query.playername, game: props.match.params.name});
+  
      //TODO verhindern dass durch page refresh ein nutzer mehrere antworten abschicken kann
    }
 
@@ -88,7 +91,7 @@ class Game extends Component {
               <div className="voting">
                 {this.state.round.answers.map((answer,i)=>
                   <div>
-                    <input disabled={this.state.answerSubmitted} type="radio" name="voting" id="voting-check-{i}" onChange={(e)=>{this.submitVote(answer)}}/>
+                    <input checked={answer === this.props.vote}  disabled={this.props.vote} type="radio" name="voting" id="voting-check-{i}" onChange={(e)=>{this.submitVote(answer)}}/>
                     <label for="voting-check-{i}">{answer}</label>
                   </div>
                 )}

@@ -34,6 +34,11 @@ socket.on("round", function(round){
   AppActions.setRound(round)
 })
 
+socket.on("playerinfo", function (playerinfo) {
+  console.log({playerinfo});
+  AppActions.setPlayerInfo(playerinfo);
+});
+
 socket.on("answerlist", function(answers){
   console.log("set answerlist: "+answers)
   AppActions.setAnswers(answers)
@@ -46,6 +51,8 @@ socket.on("errorMsg", function (msg) {
 class AppStore {
   constructor() {
     this.playername = 'unknown'
+    this.ownAnswer = ''
+    this.vote = ''
     this.gamename = false
     this.games = []
     this.players = []
@@ -67,6 +74,8 @@ class AppStore {
       setPlayers: AppActions.SET_PLAYERS,
       setRound: AppActions.SET_ROUND,
       getRound: AppActions.GET_ROUND,
+      getPlayerInfo: AppActions.GET_PLAYER_INFO,
+      setPlayerInfo: AppActions.SET_PLAYER_INFO,
       setAnswers: AppActions.SET_ANSWERS,
       submitAnswer: AppActions.SUBMIT_ANSWER,
       submitVote: AppActions.SUBMIT_VOTE,
@@ -99,6 +108,16 @@ class AppStore {
 
   leaveGame(){
     console.log("LEAVE "+this.gamename)
+    this.ownAnswer = '';
+    this.vote = '';
+    this.round = {
+      id: -1,
+      state: 'PRE_GAME',
+      question: "",
+      answers: [],
+    };
+    this.gamename = false;
+    this.players = [];
     socket.emit("leave game", {game: this.gamename, player: this.playername})
   }
 
@@ -118,6 +137,16 @@ class AppStore {
     let target = gamename || this.gamename
     socket.emit('get round',{game: target})
   }
+
+  getPlayerInfo(param) {
+    socket.emit("playerinfo", param)
+  }
+
+  setPlayerInfo(playerinfo) {
+    this.ownAnswer = playerinfo.answer ? playerinfo.answer : ''
+    this.vote = playerinfo.vote ? playerinfo.vote : ''
+  }
+
   setAnswers(answers){
     this.round = {...this.round, answers}
   }

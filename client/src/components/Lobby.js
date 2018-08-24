@@ -52,6 +52,7 @@ class Lobby extends Component {
             <button
               onClick={() => {
                 AppActions.flushAll();
+                window.location.reload();
               }}
             >
               Flush redis

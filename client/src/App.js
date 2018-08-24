@@ -6,8 +6,6 @@ import AppStore from './flux/AppStore'
 import Lobby from './components/Lobby'
 import Game from './components/Game'
 
-
-
 let getState = () => {
     return {
         playername: AppStore.getState().playername,
@@ -15,6 +13,8 @@ let getState = () => {
         games: AppStore.getState().games,
         players: AppStore.getState().players,
         round: AppStore.getState().round,
+        ownAnswer: AppStore.getState().ownAnswer,
+        vote: AppStore.getState().vote
     }
 }
 
@@ -48,7 +48,7 @@ class App extends Component {
           </header>
           <Switch>
             <Route path="/game/:name">
-              <Game players={this.state.players} round={this.state.round}/>
+              <Game players={this.state.players} round={this.state.round} playername={this.state.playername} ownAnswer={this.state.ownAnswer} vote={this.state.vote}/>
             </Route>
             <Route exact path="/">
               <Lobby playername={this.state.playername} gamename={this.state.gamename} games={this.state.games}/>

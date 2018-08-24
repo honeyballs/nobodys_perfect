@@ -4,13 +4,14 @@ import socketio from "socket.io";
 import Redis from "ioredis";
 import uuid from "uuid/v1";
 import QUESTIONS from './questions'
+import questions from "./questions";
 
 let app = express();
 let server = http.Server(app);
 let io = socketio(server);
 
-let redis = new Redis({ host: '192.168.99.100', password: "passwort" });
-let sub = new Redis({ host: '192.168.99.100', password: "passwort" });
+let redis = new Redis({ host: 'localhost', password: "passwort" });
+let sub = new Redis({ host: 'localhost', password: "passwort" });
 
 const DELIMITER = ':'
 const MIN_PLAYERCOUNT = 2
@@ -27,7 +28,7 @@ app.get("/", (req, res) => {
   res.send("<h1>I'm working.</h1>");
 });
 
-// Subscribe to the messaging system
+// Subscribe to the redis messaging system
 sub.subscribe('messages', (err, count) => {
     console.log(`Subscribed to ${count} channels.`);
 })
@@ -121,6 +122,13 @@ io.on("connection", socket => {
     emitPlayerslist(params.game)
   })
 
+  socket.on("playerinfo", async params => {
+    console.log(params);
+    let playerInfo = await redis.hgetall(`player${DELIMITER}${params.playername}${DELIMITER}${params.game}`);
+    console.log(playerInfo);
+    socket.emit("playerinfo", playerInfo); 
+  })
+
   socket.on("set answer", async params=>{
     //playername als id ausreichend?
     console.log(params.player+"answered: "+params.answer+" in "+params.game)
@@ -136,7 +144,7 @@ io.on("connection", socket => {
     //playername als id ausreichend?
     console.log(params.player+"voted: "+params.answer+" in "+params.game)
     await redis.hmset(`player${DELIMITER}${params.player}${DELIMITER}${params.game}`, 'vote', params.answer)
-    let voting = await emitVoting(params.game)
+    let voting = await getVoting(params.game)
     let players = await getPlayerlist(params.game)
     if(voting.sum == players.length){
       //TODO:END VOTE
@@ -214,7 +222,6 @@ io.on("connection", socket => {
   async function getAnswerlist(gamename){
     let playerlist = await getPlayerlist(gamename)
     let answers = []
-    //TODO: add correct answer
     if (playerlist && playerlist.length > 0) {
       let promises = playerlist.map(name=>{
         return redis.hgetall(`player${DELIMITER}${name}${DELIMITER}${gamename}`)
@@ -223,9 +230,16 @@ io.on("connection", socket => {
       players.forEach(player=>{
         if(player.answer && player.answer.length) answers.push(player.answer)
       })
+      // Load Game Hash to get question Id and add the right answer to the mix
+      let qId = await redis.hget(`game${DELIMITER}${gamename}`, `question`);
+      console.log(qId);
+      answers.push(questions[qId].answer);
+      
+      // Randomize the order of answers
+      answers = answers.sort(() => Math.random() - 0.5);
+
     }
 
-    //TODO randomize order
     return answers
   }
 
@@ -237,13 +251,6 @@ io.on("connection", socket => {
       })
       await Promise.all(promises)
     }
-  }
-
-  async function emitVoting(gamename){
-    let result = await getVoting(gamename)
-    //TODO; nur an channel
-    io.emit('voting', result)
-    return result
   }
 
   async function getVoting(gamename){
