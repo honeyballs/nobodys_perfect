@@ -73,7 +73,6 @@ class AppStore {
       getRound: AppActions.GET_ROUND,
       setAnswers: AppActions.SET_ANSWERS,
       submitAnswer: AppActions.SUBMIT_ANSWER,
-      setOwnAnswer: AppActions.SET_OWN_ANSWER,
       submitVote: AppActions.SUBMIT_VOTE,
       setVotes: AppActions.SET_VOTES,
       flushAll: AppActions.FLUSH_ALL,
@@ -106,7 +105,7 @@ class AppStore {
   leaveGame(){
     console.log("LEAVE "+this.gamename)
     this.ownAnswer = '';
-    this.vote = '';
+    this.ownVote = '';
     this.round = {
       id: -1,
       state: 'PRE_GAME',
@@ -138,17 +137,16 @@ class AppStore {
   setAnswers(answers){
     this.round = {...this.round, answers}
   }
+
   submitAnswer(answer){
     console.log("submit answer: "+answer)
-    socket.emit('set answer', {game: this.gamename, player:this.playername,  answer: answer})
-  }
-
-  setOwnAnswer(answer) {
     this.ownAnswer = answer;
+    socket.emit('set answer', {game: this.gamename, player:this.playername,  answer: answer})
   }
 
   submitVote(vote){
     console.log("submit vote: "+vote)
+    this.ownVote = vote;
     socket.emit('set vote', {game: this.gamename, player:this.playername,  answer: vote})
   }
 

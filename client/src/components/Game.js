@@ -31,17 +31,18 @@ class Game extends Component {
      this.setState({
        players: nextProps.players,
        round: nextProps.round,
+       answer: nextProps.ownAnswer
      });
    }
 
 
    setAnswer(e){
-     AppActions.setOwnAnswer(e.target.value);
+     this.setState({answer: e.target.value});
    }
 
    submitAnswer(){
      //TODO: Validate input value
-     AppActions.submitAnswer(this.props.ownAnswer)
+     AppActions.submitAnswer(this.state.answer)
      this.setState({answerSubmitted: true})
    }
 
@@ -74,7 +75,7 @@ class Game extends Component {
                 <span>{this.state.round.question}</span>
               </div>
               <div id="chat-bar">
-                <input type="text" onChange={(e)=>{this.setAnswer(e)}} value={this.props.ownAnswer}/>
+                <input type="text" onChange={(e)=>{this.setAnswer(e)}} value={this.state.answer}/>
                 <button disabled={this.state.answerSubmitted} onClick={()=>{this.submitAnswer()}}>Absenden</button>
               </div>
             </div>
@@ -89,7 +90,7 @@ class Game extends Component {
               <div className="voting">
                 {this.state.round.answers.map((answer,i)=>
                   <div>
-                    <input checked={answer === this.props.vote}  disabled={this.props.vote} type="radio" name="voting" id="voting-check-{i}" onChange={(e)=>{this.submitVote(answer)}}/>
+                    <input checked={answer === this.props.ownVote}  disabled={this.props.ownVote} type="radio" name="voting" id="voting-check-{i}" onChange={(e)=>{this.submitVote(answer)}}/>
                     <label for="voting-check-{i}">{answer}</label>
                   </div>
                 )}
