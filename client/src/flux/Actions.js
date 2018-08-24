@@ -1,4 +1,4 @@
 import alt from './alt';
 
  export default alt.generateActions("setPlayername", "setGamename", "createGame", "joinGame", "leaveGame", "setGames", "deleteGame",
-   "setPlayers", "setRound", "getRound", "setAnswers", "submitAnswer", "submitVote", "flushAll", "getPlayerInfo", "setPlayerInfo");
+   "setPlayers", "setRound", "getRound", "setAnswers", "submitAnswer", "submitVote", "flushAll", "setOwnAnswer", "setVotes");

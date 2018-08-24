@@ -22,8 +22,6 @@ class Game extends Component {
 
      AppActions.setGamename(props.match.params.name)
      AppActions.getRound(props.match.params.name)
-
-    AppActions.getPlayerInfo({playername: query.playername, game: props.match.params.name});
   
      //TODO verhindern dass durch page refresh ein nutzer mehrere antworten abschicken kann
    }
@@ -38,12 +36,12 @@ class Game extends Component {
 
 
    setAnswer(e){
-     this.setState({answer: e.target.value})
+     AppActions.setOwnAnswer(e.target.value);
    }
 
    submitAnswer(){
      //TODO: Validate input value
-     AppActions.submitAnswer(this.state.answer)
+     AppActions.submitAnswer(this.props.ownAnswer)
      this.setState({answerSubmitted: true})
    }
 
@@ -76,7 +74,7 @@ class Game extends Component {
                 <span>{this.state.round.question}</span>
               </div>
               <div id="chat-bar">
-                <input type="text" onChange={(e)=>{this.setAnswer(e)}} value={this.state.answer}/>
+                <input type="text" onChange={(e)=>{this.setAnswer(e)}} value={this.props.ownAnswer}/>
                 <button disabled={this.state.answerSubmitted} onClick={()=>{this.submitAnswer()}}>Absenden</button>
               </div>
             </div>

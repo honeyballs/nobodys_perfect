@@ -58,10 +58,16 @@ sub.on('message', (channel, message) => {
       io.to(params[1]).emit('round updated', {state: STATE_VOTING});
     }
 
+    if(message.startsWith('VOTING')) {
+      let params = message.split('|');
+      io.to(params[1]).emit('update votes', JSON.parse(params[2]));
+    }
+
     if(message.startsWith('REVEAL_START')) {
       let params = message.split(`${DELIMITER}`)
       io.to(params[1]).emit('round updated', {state: STATE_REVEAL})
     }
+
 })
 
 io.on("connection", socket => {
@@ -268,8 +274,7 @@ io.on("connection", socket => {
 
   async function emitVoting(gamename){
     let result = await getVoting(gamename)
-    //TODO; nur an channel mit round updated event
-    io.emit('voting', result)
+    redis.publish('messages', `VOTING|${gamename}|${JSON.stringify(result)}`);
     return result
   }
 

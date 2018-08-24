@@ -36,6 +36,10 @@ socket.on("answerlist", function(answers){
   AppActions.setAnswers(answers)
 })
 
+socket.on("update votes", function(voting) {
+  console.log("update votes: "+voting);
+})
+
 socket.on("errorMsg", function (msg) {
     console.log(msg);
 })
@@ -44,7 +48,7 @@ class AppStore {
   constructor() {
     this.playername = 'unknown'
     this.ownAnswer = ''
-    this.vote = ''
+    this.ownVote = ''
     this.gamename = false
     this.games = []
     this.players = []
@@ -54,6 +58,7 @@ class AppStore {
       question: "",
       answers: [],
     }
+    this.votes = {}
 
     this.bindListeners({
       setPlayername: AppActions.SET_PLAYERNAME,
@@ -66,11 +71,11 @@ class AppStore {
       setPlayers: AppActions.SET_PLAYERS,
       setRound: AppActions.SET_ROUND,
       getRound: AppActions.GET_ROUND,
-      getPlayerInfo: AppActions.GET_PLAYER_INFO,
-      setPlayerInfo: AppActions.SET_PLAYER_INFO,
       setAnswers: AppActions.SET_ANSWERS,
       submitAnswer: AppActions.SUBMIT_ANSWER,
+      setOwnAnswer: AppActions.SET_OWN_ANSWER,
       submitVote: AppActions.SUBMIT_VOTE,
+      setVotes: AppActions.SET_VOTES,
       flushAll: AppActions.FLUSH_ALL,
     })
   }
@@ -130,15 +135,6 @@ class AppStore {
     socket.emit('get round',{game: target})
   }
 
-  getPlayerInfo(param) {
-    socket.emit("playerinfo", param)
-  }
-
-  setPlayerInfo(playerinfo) {
-    this.ownAnswer = playerinfo.answer ? playerinfo.answer : ''
-    this.vote = playerinfo.vote ? playerinfo.vote : ''
-  }
-
   setAnswers(answers){
     this.round = {...this.round, answers}
   }
@@ -147,9 +143,17 @@ class AppStore {
     socket.emit('set answer', {game: this.gamename, player:this.playername,  answer: answer})
   }
 
+  setOwnAnswer(answer) {
+    this.ownAnswer = answer;
+  }
+
   submitVote(vote){
     console.log("submit vote: "+vote)
     socket.emit('set vote', {game: this.gamename, player:this.playername,  answer: vote})
+  }
+
+  setVotes(votes) {
+    this.votes = votes;
   }
 
   flushAll(){
