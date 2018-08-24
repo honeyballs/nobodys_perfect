@@ -157,7 +157,7 @@ io.on("connection", socket => {
 
   socket.on("gamestate", async params =>{
     console.log(params.player+" requested gamestate for "+params.game)
-    let round = await redis.hmgetall(`game${DELIMITER}${params.game}`,'roundid', 'state', 'question')
+    let round = await redis.hgetall(`game${DELIMITER}${params.game}`,'roundid', 'state', 'question')
 
     let answers = await getAnswerlist(name)
     let voting = await getVoting(name)
