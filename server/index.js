@@ -138,16 +138,9 @@ io.on("connection", socket => {
     emitPlayerlist(params.game)
   })
 
-  socket.on("playerinfo", async params => {
-    console.log(params);
-    let playerInfo = await redis.hgetall(`player${DELIMITER}${params.playername}${DELIMITER}${params.game}`);
-    console.log(playerInfo);
-    socket.emit("playerinfo", playerInfo);
-  })
-
   socket.on("set answer", async params=>{
     //playername als id ausreichend?
-    console.log(params.player+"answered: "+params.answer+" in "+params.game)
+    console.log(params.player+" answered: "+params.answer+" in "+params.game)
     await redis.hmset(`player${DELIMITER}${params.player}${DELIMITER}${params.game}`, 'answer', params.answer)
     let answers = await emitAnswers(params.game)
     let players = await getPlayerlist(params.game)
@@ -158,7 +151,7 @@ io.on("connection", socket => {
 
   socket.on("set vote", async params=>{
     //playername als id ausreichend?
-    console.log(params.player+"voted: "+params.answer+" in "+params.game)
+    console.log(params.player+" voted: "+params.answer+" in "+params.game)
     await redis.hmset(`player${DELIMITER}${params.player}${DELIMITER}${params.game}`, 'vote', params.answer)
     let voting = await getVoting(params.game)
     let players = await getPlayerlist(params.game)
