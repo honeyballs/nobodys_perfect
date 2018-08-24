@@ -94,7 +94,7 @@ io.on("connection", socket => {
       let result = await redis.hgetall(`game${DELIMITER}${params.game}`)
       if (result && result.state) {
         redis.sadd(`playerlist${DELIMITER}${params.game}`, `${params.player}`)
-        await redis.hmset(`player${DELIMITER}${params.player}${DELIMITER}${params.game}`, 'name', params.player, 'score', 0, 'answer', false, 'vote', false, 'delta', 0)
+        await redis.hmset(`player${DELIMITER}${params.player}${DELIMITER}${params.game}`, 'name', params.player, 'score', 0, 'answer', '', 'vote', '', 'delta', 0)
         let count = await redis.hincrby(`game${DELIMITER}${params.game}`, "playercount", 1)
         if(count === MIN_PLAYERCOUNT) await startGame(params.game)
         emitPlayerlist(params.game)
