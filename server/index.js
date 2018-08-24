@@ -94,7 +94,7 @@ io.on("connection", socket => {
       let result = await redis.hgetall(`game${DELIMITER}${params.game}`)
       if (result && result.state) {
         redis.sadd(`playerlist${DELIMITER}${params.game}`, `${params.player}`)
-        await redis.hmset(`player${DELIMITER}${params.player}${DELIMITER}${params.game}`, 'score', 0, 'answer', false, 'vote', false, 'delta', 0)
+        await redis.hmset(`player${DELIMITER}${params.player}${DELIMITER}${params.game}`, 'name', params.player, 'score', 0, 'answer', false, 'vote', false, 'delta', 0)
         let count = await redis.hincrby(`game${DELIMITER}${params.game}`, "playercount", 1)
         if(count === MIN_PLAYERCOUNT) await startGame(params.game)
         emitPlayerlist(params.game)
@@ -216,11 +216,12 @@ io.on("connection", socket => {
 
   async function emitPlayerlist(gamename){
     let result = await getPlayerlist(gamename)
-    let playerlist = []
+    let playerlist = [];
     if(result && result.length > 0){
-      playerlist = result.map(p=>{
-        return {name: p, score: 0}
-      })
+        let promises = result.map(playername => {
+          return redis.hgetall(`player${DELIMITER}${playername}${DELIMITER}${gamename}`)
+        });
+        playerlist = await Promise.all(promises);
     }
     redis.publish('messages', `PLAYERLIST|${gamename}|${JSON.stringify(playerlist)}`);
   }
