@@ -44,13 +44,18 @@ sub.on('message', (channel, message) => {
       let params = message.split(`${DELIMITER}`);
       //TODO: clear answers of players
       // Params are message, name, id, questionId. Maybe implement keys?
-      io.to(params[1]).emit('round updated', {id: params[2], state: STATE_SHOW_QUESTION, question: QUESTIONS[Number(params[3])].question, answers: []})
+      io.to(params[1]).emit('round updated', {id: params[2], state: STATE_SHOW_QUESTION, question: QUESTIONS[Number(params[3])].question, answers: [QUESTIONS[Number(params[3])].answer]})
     }
 
     if (message.startsWith('PLAYERLIST')) {
       let params = message.split('|');
       // Params are name, playerlist as JSON
       io.to(params[1]).emit('playerlist', JSON.parse(params[2]));
+    }
+
+    if(message.startsWith('ANSWERLIST')) {
+      let params = message.split(`|`)
+      io.to(params[1]).emit('round updated', {answers: JSON.parse(params[2])})
     }
 
     if (message.startsWith('VOTING_START')) {
@@ -226,8 +231,7 @@ io.on("connection", socket => {
 
   async function emitAnswers(gamename){
     let result = await getAnswerlist(gamename)
-    //TODO; nur an channel mit round updated event
-    io.emit('answerlist', result)
+    redis.publish('messages', `ANSWERLIST|${gamename}|${JSON.stringify(result)}`)
     return result
   }
 
