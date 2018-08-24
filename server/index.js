@@ -55,6 +55,10 @@ sub.on('message', (channel, message) => {
       io.to(params[1]).emit('round updated', {state: STATE_VOTING});
     }
 
+    if(message.startsWith('REVEAL_START')) {
+      let params = message.split(`${DELIMITER}`)
+      io.to(params[1]).emit('round updated', {state: STATE_REVEAL})
+    }
 })
 
 io.on("connection", socket => {
@@ -138,8 +142,9 @@ io.on("connection", socket => {
     await redis.hmset(`player${DELIMITER}${params.player}${DELIMITER}${params.game}`, 'vote', params.answer)
     let voting = await emitVoting(params.game)
     let players = await getPlayerlist(params.game)
+    console.log(voting.sum+" of "+players.length+" votes")
     if(voting.sum == players.length){
-      //TODO:END VOTE
+      startReveal(params.game)
     }
   })
 
@@ -167,6 +172,11 @@ io.on("connection", socket => {
   async function startVote(name){
     await redis.hmset(`game${DELIMITER}${name}`, 'state', STATE_VOTING)
     redis.publish('messages', `VOTING_START${DELIMITER}${name}`)
+  }
+
+  async function startReveal(name){
+    await redis.hmset(`game${DELIMITER}${name}`, 'state', STATE_REVEAL)
+    redis.publish('messages', `REVEAL_START${DELIMITER}${name}`)
   }
 
   //if you join a game that has already started, get the current round
@@ -206,7 +216,7 @@ io.on("connection", socket => {
 
   async function emitAnswers(gamename){
     let result = await getAnswerlist(gamename)
-    //TODO; nur an channel
+    //TODO; nur an channel mit round updated event
     io.emit('answerlist', result)
     return result
   }
@@ -241,7 +251,7 @@ io.on("connection", socket => {
 
   async function emitVoting(gamename){
     let result = await getVoting(gamename)
-    //TODO; nur an channel
+    //TODO; nur an channel mit round updated event
     io.emit('voting', result)
     return result
   }
