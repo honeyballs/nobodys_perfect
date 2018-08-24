@@ -22,7 +22,7 @@ class Game extends Component {
 
      AppActions.setGamename(props.match.params.name)
      AppActions.getRound(props.match.params.name)
-  
+
      //TODO verhindern dass durch page refresh ein nutzer mehrere antworten abschicken kann
    }
 
@@ -111,7 +111,7 @@ class Game extends Component {
         </div>
         <div id="player-list">
           {this.state.round.state == 'SHOW_QUESTION' && (
-            <span>({this.state.round.answers.length}/{this.state.players.length} Spielern haben geantwortet)</span>
+            <span>({this.state.round.answers.length-1}/{this.state.players.length} Spielern haben geantwortet)</span>
           )}
           {this.state.players.map(player=>
             <div>

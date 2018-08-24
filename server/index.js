@@ -63,9 +63,8 @@ sub.on('message', (channel, message) => {
       io.to(params[1]).emit('round updated', {state: STATE_VOTING});
     }
 
-    if(message.startsWith('VOTING')) {
+    if(message.startsWith('VOTING_GET')) {
       let params = message.split('|');
-      console.log(params[2]);
       io.to(params[1]).emit('round updated', {votes: JSON.parse(params[2])});
     }
 
@@ -154,7 +153,7 @@ io.on("connection", socket => {
     //playername als id ausreichend?
     console.log(params.player+" voted: "+params.answer+" in "+params.game)
     await redis.hmset(`player${DELIMITER}${params.player}${DELIMITER}${params.game}`, 'vote', params.answer)
-    let voting = await getVoting(params.game)
+    let voting = await emitVoting(params.game)
     let players = await getPlayerlist(params.game)
     console.log(voting.sum+" of "+players.length+" votes")
     if(voting.sum == players.length){
@@ -271,7 +270,7 @@ io.on("connection", socket => {
 
   async function emitVoting(gamename){
     let result = await getVoting(gamename)
-    redis.publish('messages', `VOTING|${gamename}|${JSON.stringify(result)}`);
+    redis.publish('messages', `VOTING_GET|${gamename}|${JSON.stringify(result)}`);
     return result
   }
 
