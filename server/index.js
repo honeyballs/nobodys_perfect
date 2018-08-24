@@ -210,11 +210,12 @@ io.on("connection", socket => {
 
   async function emitPlayerlist(gamename){
     let result = await getPlayerlist(gamename)
-    let playerlist = []
+    let playerlist = [];
     if(result && result.length > 0){
-      playerlist = result.map(p=>{
-        return {name: p, score: 0}
-      })
+        let promises = result.map(playername => {
+          return redis.hgetall(`player${DELIMITER}${playername}${DELIMITER}${gamename}`)
+        });
+        playerlist = await Promise.all(promises);
     }
     redis.publish('messages', `PLAYERLIST|${gamename}|${JSON.stringify(playerlist)}`);
   }
