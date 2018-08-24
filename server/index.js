@@ -44,13 +44,18 @@ sub.on('message', (channel, message) => {
       let params = message.split(`${DELIMITER}`);
       //TODO: clear answers of players
       // Params are message, name, id, questionId. Maybe implement keys?
-      io.to(params[1]).emit('round updated', {id: params[2], state: STATE_SHOW_QUESTION, question: QUESTIONS[Number(params[3])].question, answers: []})
+      io.to(params[1]).emit('round updated', {id: params[2], state: STATE_SHOW_QUESTION, question: QUESTIONS[Number(params[3])].question, answers: [QUESTIONS[Number(params[3])].answer]})
     }
 
     if (message.startsWith('PLAYERLIST')) {
       let params = message.split('|');
       // Params are name, playerlist as JSON
       io.to(params[1]).emit('playerlist', JSON.parse(params[2]));
+    }
+
+    if(message.startsWith('ANSWERLIST')) {
+      let params = message.split(`|`)
+      io.to(params[1]).emit('round updated', {answers: JSON.parse(params[2])})
     }
 
     if (message.startsWith('VOTING_START')) {
@@ -95,7 +100,7 @@ io.on("connection", socket => {
       let result = await redis.hgetall(`game${DELIMITER}${params.game}`)
       if (result && result.state) {
         redis.sadd(`playerlist${DELIMITER}${params.game}`, `${params.player}`)
-        await redis.hmset(`player${DELIMITER}${params.player}${DELIMITER}${params.game}`, 'name', params.player, 'score', 0, 'answer', false, 'vote', false, 'delta', 0)
+        await redis.hmset(`player${DELIMITER}${params.player}${DELIMITER}${params.game}`, 'name', params.player, 'score', 0, 'answer', '', 'vote', '', 'delta', 0)
         let count = await redis.hincrby(`game${DELIMITER}${params.game}`, "playercount", 1)
         if(count === MIN_PLAYERCOUNT) await startGame(params.game)
         emitPlayerlist(params.game)
@@ -233,8 +238,7 @@ io.on("connection", socket => {
 
   async function emitAnswers(gamename){
     let result = await getAnswerlist(gamename)
-    //TODO; nur an channel mit round updated event
-    io.emit('answerlist', result)
+    redis.publish('messages', `ANSWERLIST|${gamename}|${JSON.stringify(result)}`)
     return result
   }
 
