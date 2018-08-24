@@ -36,10 +36,6 @@ socket.on("answerlist", function(answers){
   AppActions.setAnswers(answers)
 })
 
-socket.on("update votes", function(voting) {
-  console.log("update votes: "+voting);
-})
-
 socket.on("errorMsg", function (msg) {
     console.log(msg);
 })
@@ -57,8 +53,8 @@ class AppStore {
       state: 'PRE_GAME',
       question: "",
       answers: [],
+      votes: {}
     }
-    this.votes = {}
 
     this.bindListeners({
       setPlayername: AppActions.SET_PLAYERNAME,
@@ -74,7 +70,6 @@ class AppStore {
       setAnswers: AppActions.SET_ANSWERS,
       submitAnswer: AppActions.SUBMIT_ANSWER,
       submitVote: AppActions.SUBMIT_VOTE,
-      setVotes: AppActions.SET_VOTES,
       flushAll: AppActions.FLUSH_ALL,
     })
   }
@@ -111,6 +106,7 @@ class AppStore {
       state: 'PRE_GAME',
       question: "",
       answers: [],
+      votes: {}
     };
     this.players = [];
     socket.emit("leave game", {game: this.gamename, player: this.playername})
@@ -150,16 +146,10 @@ class AppStore {
     socket.emit('set vote', {game: this.gamename, player:this.playername,  answer: vote})
   }
 
-  setVotes(votes) {
-    this.votes = votes;
-  }
-
   flushAll(){
     socket.emit("flush all")
   }
 
 }
-
-
 
 export default alt.createStore(AppStore);

@@ -65,7 +65,8 @@ sub.on('message', (channel, message) => {
 
     if(message.startsWith('VOTING')) {
       let params = message.split('|');
-      io.to(params[1]).emit('update votes', JSON.parse(params[2]));
+      console.log(params[2]);
+      io.to(params[1]).emit('round updated', {votes: JSON.parse(params[2])});
     }
 
     if(message.startsWith('REVEAL_START')) {
