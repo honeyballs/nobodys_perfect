@@ -89,6 +89,7 @@ io.on("connection", socket => {
       let result = await redis.hgetall(`game${DELIMITER}${params.game}`)
       if (result && result.state) {
         redis.sadd(`playerlist${DELIMITER}${params.game}`, `${params.player}`)
+        await redis.hmset(`player${DELIMITER}${params.player}${DELIMITER}${params.game}`, 'score', 0, 'answer', false, 'vote', false, 'delta': 0)
         let count = await redis.hincrby(`game${DELIMITER}${params.game}`, "playercount", 1)
         if(count === MIN_PLAYERCOUNT) await startGame(params.game)
         emitPlayerlist(params.game)
@@ -130,7 +131,7 @@ io.on("connection", socket => {
     console.log(params);
     let playerInfo = await redis.hgetall(`player${DELIMITER}${params.playername}${DELIMITER}${params.game}`);
     console.log(playerInfo);
-    socket.emit("playerinfo", playerInfo); 
+    socket.emit("playerinfo", playerInfo);
   })
 
   socket.on("set answer", async params=>{
@@ -245,7 +246,7 @@ io.on("connection", socket => {
       let qId = await redis.hget(`game${DELIMITER}${gamename}`, `question`);
       console.log(qId);
       answers.push(questions[qId].answer);
-      
+
       // Randomize the order of answers
       answers = answers.sort(() => Math.random() - 0.5);
 
