@@ -35,7 +35,7 @@ class Game extends Component {
        players: nextProps.players,
        round: nextProps.round,
        answer: nextProps.ownAnswer,
-       answerSubmitted: answer.length > 0
+       answerSubmitted: nextProps.ownAnswer.length > 0
      });
    }
 
