@@ -5,13 +5,15 @@ import Redis from "ioredis";
 import uuid from "uuid/v1";
 import QUESTIONS from './questions'
 import questions from "./questions";
+import conf from "./redis-config";
+
 
 let app = express();
 let server = http.Server(app);
 let io = socketio(server);
 
-let redis = new Redis({ host: 'localhost', password: "passwort" });
-let sub = new Redis({ host: 'localhost', password: "passwort" });
+let redis = new Redis({ host: conf.host, password: conf.password });
+let sub = new Redis({ host: conf.host, password: conf.password });
 
 const DELIMITER = ':'
 const MIN_PLAYERCOUNT = 2
