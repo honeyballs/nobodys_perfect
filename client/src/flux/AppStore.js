@@ -113,9 +113,9 @@ class AppStore {
       question: "",
       answers: [],
     };
-    this.gamename = false;
     this.players = [];
     socket.emit("leave game", {game: this.gamename, player: this.playername})
+    this.gamename = false;
   }
 
   deleteGame(name){

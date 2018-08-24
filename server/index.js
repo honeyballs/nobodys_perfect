@@ -248,7 +248,6 @@ io.on("connection", socket => {
       })
       // Load Game Hash to get question Id and add the right answer to the mix
       let qId = await redis.hget(`game${DELIMITER}${gamename}`, `question`);
-      console.log(qId);
       answers.push(questions[qId].answer);
 
       // Randomize the order of answers
