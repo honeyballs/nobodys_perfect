@@ -157,21 +157,27 @@ io.on("connection", socket => {
 
   socket.on("gamestate", async params =>{
     console.log(params.player+" requested gamestate for "+params.game)
-    let round = await redis.hgetall(`game${DELIMITER}${params.game}`,'roundid', 'state', 'question')
-
-    let answers = await getAnswerlist(name)
-    let voting = await getVoting(name)
+    socket.join(params.game)
+    let round = await redis.hgetall(`game${DELIMITER}${params.game}`)
+    let answers, voting, question;
+    if(round.state != STATE_PRE_GAME){
+      answers = await getAnswerlist(params.game)
+      voting = await getVoting(params.game)
+      question = QUESTIONS[round.question].question
+    }
     let player = await redis.hmget(`player${DELIMITER}${params.player}${DELIMITER}${params.game}`, 'answer','voting')
+    let playerlist = await getDetailedPlayerlist(params.game)
     if(round){
-      round.question = QUESTIONS[round.question].question
-      round.answers = answers
-      round.voting = voting
+      round.question = question || ''
+      round.answers = answers || []
+      round.voting = voting || {}
     }
     //TODO: Auswertungsobjekt ergänzen
     socket.emit('gamestate', {
       round: round,
       answer: player[0],
       vote: player[1],
+      players: playerlist,
     })
   })
 
@@ -221,6 +227,11 @@ io.on("connection", socket => {
   }
 
   async function emitPlayerlist(gamename){
+    let playerlist = await getDetailedPlayerlist(gamename)
+    redis.publish('messages', `PLAYERLIST|${gamename}|${JSON.stringify(playerlist)}`);
+  }
+
+  async function getDetailedPlayerlist(gamename){
     let result = await getPlayerlist(gamename)
     let playerlist = [];
     if(result && result.length > 0){
@@ -229,7 +240,7 @@ io.on("connection", socket => {
         });
         playerlist = await Promise.all(promises);
     }
-    redis.publish('messages', `PLAYERLIST|${gamename}|${JSON.stringify(playerlist)}`);
+    return playerlist
   }
 
   async function getPlayerlist(gamename){
