@@ -165,12 +165,13 @@ io.on("connection", socket => {
       voting = await getVoting(params.game)
       question = QUESTIONS[round.question].question
     }
-    let player = await redis.hmget(`player${DELIMITER}${params.player}${DELIMITER}${params.game}`, 'answer','voting')
+    let player = await redis.hmget(`player${DELIMITER}${params.player}${DELIMITER}${params.game}`, 'answer','vote')
     let playerlist = await getDetailedPlayerlist(params.game)
     if(round){
+      round.id = round.roundid
       round.question = question || ''
       round.answers = answers || []
-      round.voting = voting || {}
+      round.votes = voting || {}
     }
     //TODO: Auswertungsobjekt ergänzen
     socket.emit('gamestate', {
