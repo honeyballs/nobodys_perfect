@@ -23,6 +23,9 @@ class Game extends Component {
      AppActions.setGamename(props.match.params.name)
      AppActions.getRound(props.match.params.name)
 
+     // Load all data already on the backend, important in case of refresh
+     AppActions.getGameState({game: props.match.params.name, player: query.playername});
+
      //TODO verhindern dass durch page refresh ein nutzer mehrere antworten abschicken kann
    }
 
@@ -31,10 +34,10 @@ class Game extends Component {
      this.setState({
        players: nextProps.players,
        round: nextProps.round,
-       answer: nextProps.ownAnswer
+       answer: nextProps.ownAnswer,
+       answerSubmitted: nextProps.ownAnswer.length > 0
      });
    }
-
 
    setAnswer(e){
      this.setState({answer: e.target.value});

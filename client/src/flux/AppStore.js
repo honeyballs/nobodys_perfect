@@ -36,6 +36,11 @@ socket.on("answerlist", function(answers){
   AppActions.setAnswers(answers)
 })
 
+socket.on("gamestate", function(gamestate) {
+  console.log("gamestate: " + gamestate)
+  AppActions.setGameState(gamestate);
+})
+
 socket.on("errorMsg", function (msg) {
     console.log(msg);
 })
@@ -70,6 +75,8 @@ class AppStore {
       setAnswers: AppActions.SET_ANSWERS,
       submitAnswer: AppActions.SUBMIT_ANSWER,
       submitVote: AppActions.SUBMIT_VOTE,
+      getGameState: AppActions.GET_GAME_STATE,
+      setGameState: AppActions.SET_GAME_STATE,
       flushAll: AppActions.FLUSH_ALL,
     })
   }
@@ -144,6 +151,18 @@ class AppStore {
     console.log("submit vote: "+vote)
     this.ownVote = vote;
     socket.emit('set vote', {game: this.gamename, player:this.playername,  answer: vote})
+  }
+
+  getGameState(reqObj) {
+    console.log("getGameState: " + reqObj);
+    socket.emit('gamestate', reqObj);
+  }
+
+  setGameState(gameState) {
+    this.round = gameState.round;
+    this.ownAnswer = gameState.answer;
+    this.ownVote = gameState.vote;
+    // TODO: Auswertungsobjekt
   }
 
   flushAll(){
