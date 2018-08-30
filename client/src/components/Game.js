@@ -113,6 +113,16 @@ class Game extends Component {
               </div>
             </div>
           )}
+          {this.state.round.state == 'FINISHED' && (
+            <div>
+              <span>
+                Dieses Spiel ist beendet
+              </span>
+              <div>
+              TODO: Endstand anzeigen
+              </div>
+            </div>
+          )}
         </div>
         <div id="player-list">
           {this.state.round.state == 'SHOW_QUESTION' && (

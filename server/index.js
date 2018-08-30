@@ -75,6 +75,11 @@ sub.on('message', (channel, message) => {
       io.to(params[1]).emit('round updated', {state: STATE_REVEAL, voting: JSON.parse(params[2])})
     }
 
+    if (message.startsWith('GAME_FINISH')) {
+      let params = message.split(`${DELIMITER}`);
+      io.to(params[1]).emit('round updated', {state: STATE_FINISHED});
+    }
+
 })
 
 io.on("connection", socket => {
@@ -201,9 +206,13 @@ io.on("connection", socket => {
 
   async function startRound(name, roundId=0){
     console.log(`started round ${roundId} in ${name}`)
-    //TODO: abfangen, wenn keine Fragen mehr bzw Spiel zu ende
-    resetRoundData(name)
+    await resetRoundData(name)
     let questionId = roundId || 0
+    if(!QUESTIONS[questionId]){
+      console.log(`game ${name} ended at round ${roundId}`)
+      endGame(name)
+      return
+    }
     await redis.hmset(`game${DELIMITER}${name}`, 'state', STATE_SHOW_QUESTION, 'question', questionId)
     redis.publish('messages', `ROUND_START${DELIMITER}${name}${DELIMITER}${roundId}${DELIMITER}${questionId}`);
   }
@@ -378,6 +387,11 @@ io.on("connection", socket => {
   async function nextRound(gamename){
     let roundId = await redis.hincrby(`game${DELIMITER}${gamename}`, "roundid", 1)
     return roundId
+  }
+
+  async function endGame(gamename){
+    await redis.hmset(`game${DELIMITER}${gamename}`, 'state', STATE_FINISHED)
+    redis.publish('messages', `GAME_FINISH${DELIMITER}${gamename}`)
   }
 
 });
