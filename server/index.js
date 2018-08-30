@@ -22,6 +22,8 @@ const STATE_SHOW_QUESTION = 'SHOW_QUESTION'
 const STATE_VOTING = 'VOTING'
 const STATE_REVEAL = 'REVEAL'
 const STATE_FINISHED = 'FINISHED'
+const SCORE_RIGHT_ANSWER = 3
+const SCORE_ANSWER_VOTED = 1
 
 // Use the given port:
 let port = process.env.PORT || 3000;
@@ -37,7 +39,7 @@ sub.subscribe('messages', (err, count) => {
 
 // Receive messages
 sub.on('message', (channel, message) => {
-    console.log(`Received message "${message}" from channel "${channel}".`);
+    //console.log(`Received message "${message}" from channel "${channel}".`);
     // Implement actions
 
     if (message.startsWith('ROUND_START')) {
@@ -65,12 +67,12 @@ sub.on('message', (channel, message) => {
 
     if(message.startsWith('VOTING_GET')) {
       let params = message.split('|');
-      io.to(params[1]).emit('round updated', {votes: JSON.parse(params[2])});
+      io.to(params[1]).emit('round updated', {voting: JSON.parse(params[2])});
     }
 
     if(message.startsWith('REVEAL_START')) {
-      let params = message.split(`${DELIMITER}`)
-      io.to(params[1]).emit('round updated', {state: STATE_REVEAL})
+      let params = message.split('|')
+      io.to(params[1]).emit('round updated', {state: STATE_REVEAL, voting: JSON.parse(params[2])})
     }
 
 })
@@ -85,7 +87,7 @@ io.on("connection", socket => {
     // Check if a game with this name exists
     let result = await redis.exists(`game:${name}`)
     if (result === 0) {
-        redis.hmset(`game${DELIMITER}${name}`, "name", name, "playercount", 0, "state", STATE_PRE_GAME);
+        redis.hmset(`game${DELIMITER}${name}`, "name", name, "playercount", 0, "state", STATE_PRE_GAME, "roundid", 0);
         redis.sadd(`games`, name);
         emitAllGames();
         redis.publish('messages', 'New game created');
@@ -171,7 +173,7 @@ io.on("connection", socket => {
       round.id = round.roundid
       round.question = question || ''
       round.answers = answers || []
-      round.votes = voting || {}
+      round.voting = voting || {}
     }
     //TODO: Auswertungsobjekt ergänzen
     socket.emit('gamestate', {
@@ -197,22 +199,31 @@ io.on("connection", socket => {
     startRound(name)
   }
 
-  async function startRound(name){
-    //TODO: answer und vote aus letzter Runde resetten
-    let questionId = 0
-    await redis.hmset(`game${DELIMITER}${name}`, 'roundid', 0, 'state', STATE_SHOW_QUESTION, 'question', questionId)
-    redis.publish('messages', `ROUND_START${DELIMITER}${name}${DELIMITER}0${DELIMITER}${questionId}`);
+  async function startRound(name, roundId=0){
+    console.log(`started round ${roundId} in ${name}`)
+    //TODO: abfangen, wenn keine Fragen mehr bzw Spiel zu ende
+    resetRoundData(name)
+    let questionId = roundId || 0
+    await redis.hmset(`game${DELIMITER}${name}`, 'state', STATE_SHOW_QUESTION, 'question', questionId)
+    redis.publish('messages', `ROUND_START${DELIMITER}${name}${DELIMITER}${roundId}${DELIMITER}${questionId}`);
   }
 
   async function startVote(name){
+    console.log(`start vote in ${name}`)
     await redis.hmset(`game${DELIMITER}${name}`, 'state', STATE_VOTING)
     redis.publish('messages', `VOTING_START${DELIMITER}${name}`)
   }
 
   async function startReveal(name, voting){
-    await evaluate(name, voting)
+    console.log(`start reveal in ${name}`)
+    let result = await evaluate(name, voting)
     await redis.hmset(`game${DELIMITER}${name}`, 'state', STATE_REVEAL)
-    redis.publish('messages', `REVEAL_START${DELIMITER}${name}`)
+    redis.publish('messages', `REVEAL_START|${name}|${JSON.stringify(result)}`)
+    emitPlayerlist(name)
+    setTimeout(async ()=>{
+      let id = await nextRound(name)
+      startRound(name, id)
+    },30000)
   }
 
   async function emitAllGames(){
@@ -324,9 +335,49 @@ io.on("connection", socket => {
     return voting
   }
 
-  async function evaluate(gamename){
-    let playerlist = await getPlayerlist(gamename)
+  async function evaluate(gamename, voting){
+    let playerlist = await getDetailedPlayerlist(gamename)
+    let round = await redis.hgetall(`game${DELIMITER}${gamename}`)
+    let promises = []
+    let correctAnswer = QUESTIONS[Number(round.question)].answer
+    playerlist.forEach(player=>{
+      let newScore = Number(player.score)
+      //abgegebenen Vote auswerten:
+      console.log(`compare ${player.vote} to ${correctAnswer}`)
+      if(player.vote && player.vote.length && player.vote === correctAnswer){
+        newScore += SCORE_RIGHT_ANSWER
+        console.log(`${player.name} hat richtig geantwortet und nun ${newScore} Punkte (+${SCORE_RIGHT_ANSWER})`)
+      }
+      //erhaltene Votes auswerten:
+      let answer = voting.answers.filter(a=>a.answer === player.answer)[0]
+      if(answer && answer.count && answer.count != 0){
+        newScore += (SCORE_ANSWER_VOTED * answer.count)
+        console.log(`${player.name} hat ${answer.count} votings erhalten und nun ${newScore} Punkte (+${(SCORE_ANSWER_VOTED*answer.count)})`)
+      }
+      //neue score auf redis anwenden:
+      if(newScore != player.score) promises.push(redis.hmset(`player${DELIMITER}${player.name}${DELIMITER}${gamename}`, 'score', newScore))
+    })
+    await Promise.all(promises)
+    //korrekte Antwort setzen:
+    voting.answers.map(answer=>{
+      if(answer.answer === correctAnswer) answer.correctAnswer = true
+      return answer
+    })
+    //TODO: sort answers by count
+    return voting
+  }
 
+  async function resetRoundData(gamename){
+    let playerlist = await getPlayerlist(gamename)
+    let promises = playerlist.map(player=>{
+      return redis.hmset(`player${DELIMITER}${player}${DELIMITER}${gamename}`, 'answer', '', 'vote', '', 'delta', 0)
+    })
+    await Promise.all(promises)
+  }
+
+  async function nextRound(gamename){
+    let roundId = await redis.hincrby(`game${DELIMITER}${gamename}`, "roundid", 1)
+    return roundId
   }
 
 });

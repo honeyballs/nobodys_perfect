@@ -15,7 +15,6 @@ let getState = () => {
         round: AppStore.getState().round,
         ownAnswer: AppStore.getState().ownAnswer,
         ownVote: AppStore.getState().ownVote,
-        votes: AppStore.getState().votes
     }
 }
 
@@ -49,7 +48,7 @@ class App extends Component {
           </header>
           <Switch>
             <Route path="/game/:name">
-              <Game players={this.state.players} round={this.state.round} votes={this.state.votes} ownAnswer={this.state.ownAnswer} ownVote={this.state.ownVote}/>
+              <Game players={this.state.players} round={this.state.round} ownAnswer={this.state.ownAnswer} ownVote={this.state.ownVote}/>
             </Route>
             <Route exact path="/">
               <Lobby playername={this.state.playername} gamename={this.state.gamename} games={this.state.games}/>

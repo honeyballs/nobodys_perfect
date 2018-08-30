@@ -107,7 +107,9 @@ class Game extends Component {
                 <span>{this.state.round.question}</span>
               </div>
               <div className="reveal">
-                Auswertung
+              {this.state.round.voting.answers.map((answer,i)=>
+                <div>{answer.answer} - {answer.count} {answer.correctAnswer? 'RICHTIGE ANTWORT':''}</div>
+              )}
               </div>
             </div>
           )}

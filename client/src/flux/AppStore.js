@@ -58,7 +58,7 @@ class AppStore {
       state: 'PRE_GAME',
       question: "",
       answers: [],
-      votes: {}
+      voting: {}
     }
 
     this.bindListeners({
@@ -113,7 +113,7 @@ class AppStore {
       state: 'PRE_GAME',
       question: "",
       answers: [],
-      votes: {}
+      voting: {}
     };
     this.players = [];
     socket.emit("leave game", {game: this.gamename, player: this.playername})
