@@ -17,6 +17,7 @@ socket.on("playerlist", function(players) {
 });
 
 socket.on("round updated", function(round){
+  //TODO: reset answer and vote values on new round
   console.log("round updated: "+round)
   AppActions.setRound(round)
 })
