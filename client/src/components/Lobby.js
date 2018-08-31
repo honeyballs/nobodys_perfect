@@ -72,7 +72,7 @@ class Lobby extends Component {
             />
           </div>
           <div>
-            <label for="not-running-check">Not running</label>
+            <label>Not running</label>
             <input
               id="not-running-check"
               type="checkbox"
@@ -84,6 +84,7 @@ class Lobby extends Component {
           </div>
           <h3>Games</h3>
           <table>
+            <tbody>
           <tr>
               <td>Name</td>
               <td>Players</td>
@@ -102,7 +103,7 @@ class Lobby extends Component {
                 return true;
               })
               .map(game => (
-                <tr>
+                <tr key={game.name}>
                   <td>{game.name}</td>
                   <td>{game.playercount} Player</td>
                   <td>{game.state}</td>
@@ -124,6 +125,7 @@ class Lobby extends Component {
                   </td>
                 </tr>
               ))}
+              </tbody>
           </table>
         </div>
       </div>

@@ -46,6 +46,7 @@ class App extends Component {
           <header className="App-header">
             <h1 className="App-title">Nobody's perfect</h1>
           </header>
+          <div className="content">
           <Switch>
             <Route path="/game/:name">
               <Game players={this.state.players} round={this.state.round} ownAnswer={this.state.ownAnswer} ownVote={this.state.ownVote}/>
@@ -54,6 +55,7 @@ class App extends Component {
               <Lobby playername={this.state.playername} gamename={this.state.gamename} games={this.state.games}/>
             </Route>
           </Switch>
+          </div>
         </div>
       </BrowserRouter>
     );
