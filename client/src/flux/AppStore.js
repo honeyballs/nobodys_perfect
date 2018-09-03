@@ -17,7 +17,6 @@ socket.on("playerlist", function(players) {
 });
 
 socket.on("round updated", function(round){
-  //TODO: reset answer and vote values on new round
   console.log("round updated: "+round)
   AppActions.setRound(round)
 })
@@ -131,6 +130,10 @@ class AppStore {
 
   setRound(round){
     console.log("set round", round)
+    if(round.state === 'SHOW_QUESTION' && this.round.state === 'REVEAL'){
+      this.ownAnswer = ''
+      this.ownVote = ''
+    }
     this.round = {...this.round, ...round}
   }
   getRound(gamename){
