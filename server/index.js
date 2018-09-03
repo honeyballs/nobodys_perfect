@@ -232,7 +232,7 @@ io.on("connection", socket => {
     setTimeout(async ()=>{
       let id = await nextRound(name)
       startRound(name, id)
-    },30000)
+    },10000)
   }
 
   async function emitAllGames(){
