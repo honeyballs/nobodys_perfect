@@ -88,7 +88,7 @@ class Game extends Component {
           {this.state.round.state === 'VOTING' && (
             <div>
               <div className="question">
-                <h2>Runde {this.state.round.id}</h2>
+                <h2>Runde {Number(this.state.round.id)+1}</h2>
                 <span>{this.state.round.question}</span>
               </div>
               <div className="voting">
@@ -104,7 +104,7 @@ class Game extends Component {
           {this.state.round.state === 'REVEAL' && (
             <div>
               <div className="question">
-                <h2>Runde {this.state.round.id}</h2>
+                <h2>Runde {Number(this.state.round.id)+1}</h2>
                 <span>{this.state.round.question}</span>
               </div>
               <div className="reveal">
