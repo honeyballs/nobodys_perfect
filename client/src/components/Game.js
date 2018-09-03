@@ -134,7 +134,7 @@ class Game extends Component {
           {this.state.players.map(player=>
             <div id="player-div" key={player.name}>
               <p>{player.name}</p>
-              <p id="score-text">Score: {player.score}</p>
+              <p id="score-text">Score: {player.score} {this.state.round.state === 'REVEAL' && `(+${player.delta})`}</p>
             </div>
           )}
         </div>

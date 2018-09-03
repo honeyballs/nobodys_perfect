@@ -350,21 +350,21 @@ io.on("connection", socket => {
     let promises = []
     let correctAnswer = QUESTIONS[Number(round.question)].answer
     playerlist.forEach(player=>{
-      let newScore = Number(player.score)
+      let deltaScore = 0
       //abgegebenen Vote auswerten:
       console.log(`compare ${player.vote} to ${correctAnswer}`)
       if(player.vote && player.vote.length && player.vote === correctAnswer){
-        newScore += SCORE_RIGHT_ANSWER
-        console.log(`${player.name} hat richtig geantwortet und nun ${newScore} Punkte (+${SCORE_RIGHT_ANSWER})`)
+        deltaScore += SCORE_RIGHT_ANSWER
+        console.log(`${player.name} hat richtig geantwortet und nun ${Number(player.score) + deltaScore} Punkte (+${SCORE_RIGHT_ANSWER})`)
       }
       //erhaltene Votes auswerten:
       let answer = voting.answers.filter(a=>a.answer === player.answer)[0]
       if(answer && answer.count && answer.count != 0){
-        newScore += (SCORE_ANSWER_VOTED * answer.count)
-        console.log(`${player.name} hat ${answer.count} votings erhalten und nun ${newScore} Punkte (+${(SCORE_ANSWER_VOTED*answer.count)})`)
+        deltaScore += (SCORE_ANSWER_VOTED * answer.count)
+        console.log(`${player.name} hat ${answer.count} votings erhalten und nun ${Number(player.score) + deltaScore} Punkte (+${(SCORE_ANSWER_VOTED*answer.count)})`)
       }
       //neue score auf redis anwenden:
-      if(newScore != player.score) promises.push(redis.hmset(`player${DELIMITER}${player.name}${DELIMITER}${gamename}`, 'score', newScore))
+      if((Number(player.score) + deltaScore) != player.score) promises.push(redis.hmset(`player${DELIMITER}${player.name}${DELIMITER}${gamename}`, 'score', Number(player.score) + deltaScore, 'delta', deltaScore))
     })
     await Promise.all(promises)
     //korrekte Antwort setzen:
