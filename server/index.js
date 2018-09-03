@@ -44,8 +44,6 @@ sub.on('message', (channel, message) => {
 
     if (message.startsWith('ROUND_START')) {
       let params = message.split(`${DELIMITER}`);
-      //TODO: clear answers of players
-      // Params are message, name, id, questionId. Maybe implement keys?
       io.to(params[1]).emit('round updated', {id: params[2], state: STATE_SHOW_QUESTION, question: QUESTIONS[Number(params[3])].question, answers: [QUESTIONS[Number(params[3])].answer]})
     }
 

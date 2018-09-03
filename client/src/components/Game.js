@@ -75,7 +75,7 @@ class Game extends Component {
 
           {this.state.round.state === 'SHOW_QUESTION' && (
             <div id="question-container">
-              <h2>Runde {this.state.round.id}</h2>
+              <h2>Runde {Number(this.state.round.id)+1}</h2>
                 <p id="question-text">{this.state.round.question}</p>
               <div id="chat-bar">
                 <input type="text" onChange={(e)=>{this.setAnswer(e)}} value={this.state.answer} placeholder="Your answer"/>
@@ -110,7 +110,7 @@ class Game extends Component {
               <div className="reveal">
               {this.state.round.voting.answers.map((answer,i)=>
                 <div className="answer-div" key={i}>
-                  <p className={answer.correctAnswer && "right-answer"}>{answer.answer}</p> 
+                  <p className={answer.correctAnswer && "right-answer"}>{answer.answer}</p>
                   <p className="answer-count">{answer.count}</p>
                 </div>
               )}
