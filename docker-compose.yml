@@ -2,7 +2,7 @@ version: '3'
 
 services:
   server:
-    build: ./server
+    image: honeyball/np_server:latest
     ports:
       - 3000:3000
     deploy:

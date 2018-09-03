@@ -39,8 +39,18 @@ sub.subscribe('messages', (err, count) => {
 
 // Receive messages
 sub.on('message', (channel, message) => {
-    //console.log(`Received message "${message}" from channel "${channel}".`);
+    console.log(`Received message "${message}" from channel "${channel}".`);
     // Implement actions
+
+    if (message.startsWith('ERROR')) {
+      let msg = message.split(`|`);
+      io.emit('errorMsg', msg[1]);
+    }
+
+    if (message.startsWith('GAMELIST')) {
+      let params = message.split(`|`);
+      io.emit("gamelist", JSON.parse(params[1]));
+    }
 
     if (message.startsWith('ROUND_START')) {
       let params = message.split(`${DELIMITER}`);
@@ -93,9 +103,8 @@ io.on("connection", socket => {
         redis.hmset(`game${DELIMITER}${name}`, "name", name, "playercount", 0, "state", STATE_PRE_GAME, "roundid", 0);
         redis.sadd(`games`, name);
         emitAllGames();
-        redis.publish('messages', 'New game created');
     } else {
-        io.emit("errorMsg", "A game with that name already exists.");
+      redis.publish('messages', `ERROR|A game with that name already exists.`)
     }
   });
 
@@ -111,7 +120,7 @@ io.on("connection", socket => {
         emitPlayerlist(params.game)
         emitAllGames();
       } else {
-        io.emit("errorMsg", `There is no game with the name "${name}"`);
+        redis.publish('messages', `ERROR|There is no game with the name "${name}"`)
       }
   });
 
@@ -124,7 +133,6 @@ io.on("connection", socket => {
     emitPlayerlist(params.game)
     emitAllGames();
     socket.leave(params.game);
-    io.emit("left", params.game);
   });
 
   socket.on("delete game", async name => {
@@ -242,7 +250,7 @@ io.on("connection", socket => {
       })
       gamelist = await Promise.all(promises)
     }
-    io.emit("gamelist", gamelist);
+    redis.publish('messages', `GAMELIST|${JSON.stringify(gamelist)}`)
   }
 
   async function emitPlayerlist(gamename){

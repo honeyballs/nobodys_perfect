@@ -2,7 +2,9 @@ import alt from './alt'
 import AppActions from './Actions'
 import socketIOClient from "socket.io-client";
 
-var socket = socketIOClient("http://localhost:3000");
+var socket = socketIOClient("http://192.168.99.100:3000", {
+  transports:  ['websocket']
+});
 
 
 // Handle socket events
