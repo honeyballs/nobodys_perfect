@@ -312,6 +312,11 @@ io.on("connection", socket => {
   }
 
   async function getVoting(gamename){
+    let round = await redis.hmget(`game${DELIMITER}${gamename}`, `question`, `state`)
+    let correctAnswer
+    if (round[1] === STATE_REVEAL) {
+      correctAnswer = QUESTIONS[Number(round[0])].answer
+    }
     let playerlist = await getPlayerlist(gamename)
     let voting = {
       sum: 0,
@@ -319,7 +324,7 @@ io.on("connection", socket => {
     }
     let result = await getAnswerlist(gamename)
     voting.answers = result.map((answer)=>{
-      return {answer: answer, count: 0}
+      return {answer: answer, count: 0, correctAnswer: (answer === correctAnswer)}
     })
     if (playerlist && playerlist.length > 0) {
       let promises = playerlist.map(name=>{
