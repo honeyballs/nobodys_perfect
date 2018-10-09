@@ -186,7 +186,6 @@ io.on("connection", socket => {
       round.answers = answers || []
       round.voting = voting || {}
     }
-    //TODO: Auswertungsobjekt ergänzen
     socket.emit('gamestate', {
       round: round,
       answer: player[0],
@@ -383,7 +382,6 @@ io.on("connection", socket => {
       if(answer.answer === correctAnswer) answer.correctAnswer = true
       return answer
     })
-    //TODO: sort answers by count
     return voting
   }
 
