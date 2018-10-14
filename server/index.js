@@ -146,7 +146,6 @@ io.on("connection", socket => {
   })
 
   socket.on("set answer", async params=>{
-    //playername als id ausreichend?
     console.log(params.player+" answered: "+params.answer+" in "+params.game)
     await redis.hmset(`player${DELIMITER}${params.player}${DELIMITER}${params.game}`, 'answer', params.answer)
     let answers = await emitAnswers(params.game)
@@ -157,7 +156,6 @@ io.on("connection", socket => {
   })
 
   socket.on("set vote", async params=>{
-    //playername als id ausreichend?
     console.log(params.player+" voted: "+params.answer+" in "+params.game)
     await redis.hmset(`player${DELIMITER}${params.player}${DELIMITER}${params.game}`, 'vote', params.answer)
     let voting = await emitVoting(params.game)
@@ -186,7 +184,6 @@ io.on("connection", socket => {
       round.answers = answers || []
       round.voting = voting || {}
     }
-    //TODO: Auswertungsobjekt ergänzen
     socket.emit('gamestate', {
       round: round,
       answer: player[0],
@@ -383,7 +380,6 @@ io.on("connection", socket => {
       if(answer.answer === correctAnswer) answer.correctAnswer = true
       return answer
     })
-    //TODO: sort answers by count
     return voting
   }
 

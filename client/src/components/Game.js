@@ -27,8 +27,6 @@ class Game extends Component {
 
      // Load all data already on the backend, important in case of refresh
      AppActions.getGameState({game: props.match.params.name, player: query.playername});
-
-     //TODO verhindern dass durch page refresh ein nutzer mehrere antworten abschicken kann
    }
 
    componentWillReceiveProps(nextProps) {
@@ -46,7 +44,6 @@ class Game extends Component {
    }
 
    submitAnswer(){
-     //TODO: Validate input value
      AppActions.submitAnswer(this.state.answer)
      this.setState({answerSubmitted: true})
    }
@@ -122,9 +119,6 @@ class Game extends Component {
               <span>
                 Dieses Spiel ist beendet
               </span>
-              <div>
-              TODO: Endstand anzeigen
-              </div>
             </div>
           )}
           <button id="leave-button" onClick={()=>{this.leaveGame()}}>Spiel verlassen</button>

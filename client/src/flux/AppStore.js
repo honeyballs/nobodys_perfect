@@ -169,7 +169,6 @@ class AppStore {
     this.ownAnswer = gameState.answer;
     this.ownVote = gameState.vote;
     this.players = gameState.players;
-    // TODO: Auswertungsobjekt
   }
 
   flushAll(){
